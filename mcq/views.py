@@ -54,9 +54,10 @@ from django.contrib.auth.decorators import login_required
 
 @require_POST
 @csrf_protect
-@login_required  # remove this line if anonymous attempts are allowed
+#@login_required  # remove this line if anonymous attempts are allowed
 def save_quiz_results(request):
     try:
+        user = request.user if request.user.is_authenticated else None
         data = json.loads(request.body)
 
         score = int(data.get('score'))
@@ -64,7 +65,7 @@ def save_quiz_results(request):
         time_taken = int(data.get('time_taken'))
 
         attempt = QuizAttempt.objects.create(
-            user=request.user,
+            user=user,
             score=score,
             total_questions=total_questions,
             time_taken_seconds=time_taken,
