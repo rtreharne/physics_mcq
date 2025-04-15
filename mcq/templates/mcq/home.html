@@ -1,0 +1,113 @@
+{% extends 'mcq/base.html' %}
+{% block title %}Filter Questions - Physics MCQs{% endblock %}
+
+{% block content %}
+
+<h1 class="mb-4">Select Topics and Keywords</h1>
+
+<form method="get" action="{% url 'quiz' %}" id="keyword-form">
+  <!-- Hidden input for final comma-separated list -->
+  <input type="hidden" name="keywords" id="keywords-consolidated">
+
+  <div class="row bottom-buffer">
+    {% for topic in topics %}
+      <div class="col-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <!-- Topic title as clickable -->
+            <h5 class="card-title topic-title" data-topic="{{ topic.id }}" style="cursor: pointer;">
+              {{ topic.name }}
+            </h5>
+
+            <!-- Keyword checkboxes -->
+            <div id="keywords-{{ topic.id }}">
+              {% for keyword in topic.keywords.all|dictsort:"name" %}
+                {% if keyword.visible %}
+                  <div class="form-check form-check-inline mb-2">
+                    <input class="form-check-input keyword-checkbox" type="checkbox"
+                          value="{{ keyword.id }}"
+                          id="keyword-{{ keyword.id }}"
+                          {% if keyword.id in selected_keywords %}checked{% endif %}>
+                    <label class="form-check-label" for="keyword-{{ keyword.id }}">
+                      {{ keyword.name }}
+                    </label>
+                  </div>
+                {% endif %}
+              {% empty %}
+                <p class="text-muted">No keywords</p>
+              {% endfor %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  
+  
+</form>
+
+<div class="bottom-bar d-flex justify-content-between align-items-center">
+  <!-- Settings button (left) -->
+  <button type="button" class="btn btn-primary btn-lg"
+          data-bs-toggle="modal" data-bs-target="#quizConfigModal">
+    Settings
+  </button>
+
+  <!-- Start Quiz button (right) -->
+  <button type="submit" form="keyword-form" class="btn btn-primary btn-lg">
+    Start Quiz
+  </button>
+</div>
+
+<!-- Quiz Configuration Modal -->
+<div class="modal fade" id="quizConfigModal" tabindex="-1" aria-labelledby="quizConfigModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="quizConfigModalLabel">Quiz Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="numQuestions" class="form-label">Number of Questions</label>
+          <input type="number" class="form-control" id="numQuestions" name="num_questions" form="keyword-form" value="10" min="1">
+        </div>
+        <div class="mb-3">
+          <label for="timePerQuestion" class="form-label">Time per Question (in minutes)</label>
+          <input type="number" class="form-control" id="timePerQuestion" name="time_per_question" form="keyword-form" value="1" min="0.25" step="0.25">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const topicTitles = document.querySelectorAll('.topic-title');
+
+    topicTitles.forEach(title => {
+      title.addEventListener('click', () => {
+        const topicId = title.dataset.topic;
+        const keywordContainer = document.getElementById('keywords-' + topicId);
+        const checkboxes = keywordContainer.querySelectorAll('input[type="checkbox"]');
+
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+      });
+    });
+
+    // On form submit, consolidate checked values into hidden input
+    document.getElementById("keyword-form").addEventListener("submit", function (e) {
+      const selected = Array.from(document.querySelectorAll('.keyword-checkbox:checked'))
+                            .map(cb => cb.value);
+      document.getElementById("keywords-consolidated").value = selected.join(",");
+    });
+  });
+</script>
+{% endblock %}

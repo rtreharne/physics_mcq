@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Upload Topics via CSV</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button default">Upload</button>
+  </form>
+  <p>CSV must have a <code>name</code> column.</p>
+{% endblock %}

@@ -1,0 +1,1 @@
+web: gunicorn physics_mcq.wsgi:application
