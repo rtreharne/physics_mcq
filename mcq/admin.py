@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 import csv, io
 
-from .models import Topic, ExamBoard, Keyword, Question
+from .models import Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse
 from .forms import TopicCSVUploadForm, QuestionCSVUploadForm
 
 @admin.register(Topic)
@@ -127,3 +127,23 @@ class KeywordAdmin(admin.ModelAdmin):
     list_editable = ('visible',)
     list_filter = ('topic', 'visible')
     search_fields = ('name',)
+
+class QuizResponseInline(admin.TabularInline):
+    model = QuizResponse
+    extra = 0
+    readonly_fields = ('question', 'user_answer', 'correct')
+    can_delete = False
+
+@admin.register(QuizAttempt)
+class QuizAttemptAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'date_taken', 'score', 'total_questions', 'time_taken_seconds')
+    list_filter = ('date_taken', 'user')
+    search_fields = ('user__username',)
+    readonly_fields = ('date_taken', 'score', 'total_questions', 'time_taken_seconds')
+    inlines = [QuizResponseInline]
+
+@admin.register(QuizResponse)
+class QuizResponseAdmin(admin.ModelAdmin):
+    list_display = ('id', 'attempt', 'question', 'user_answer', 'correct')
+    list_filter = ('correct',)
+    search_fields = ('attempt__id', 'question__question_text')

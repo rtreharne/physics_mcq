@@ -16,7 +16,8 @@
 
 <div id="quiz-container">
   {% for question in questions %}
-    <div class="quiz-question" data-question-index="{{ forloop.counter0 }}" style="{% if not forloop.first %}display:none;{% endif %}">
+    <div class="quiz-question" data-question-index="{{ forloop.counter0 }}" data-question-id="{{ question.id }}" style="{% if not forloop.first %}display:none;{% endif %}">
+
       <h4>Q{{ forloop.counter }}: {{ question.question_text }}</h4>
 
       <div class="mt-3">

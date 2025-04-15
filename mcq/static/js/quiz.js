@@ -174,74 +174,78 @@ document.addEventListener("DOMContentLoaded", function () {
         // Scroll to the top of the main content
         container.scrollIntoView({ behavior: 'auto', block: 'start' });
 
-        function generateResultsPayload() {
-            const responses = [];
-          
-            questions.forEach((questionEl, index) => {
-              const questionId = parseInt(questionEl.dataset.questionId);
-              const correctInput = questionEl.querySelector('.form-check-input[data-correct]');
-              const correctAnswer = correctInput ? correctInput.value.trim().toUpperCase() : null;
-          
-              const userAnswerRaw = userAnswers[index] || '';
-              const userAnswer = userAnswerRaw.trim().toUpperCase();
-              const isCorrect = userAnswer === correctAnswer;
-          
-              responses.push({
-                question_id: questionId,
-                user_answer: userAnswer,
-                correct: isCorrect
-              });
-            });
-          
-            const score = responses.filter(r => r.correct).length;
-            const total_questions = questions.length;
-            const time_taken = Math.floor((quizEndTime - quizStartTime) / 1000);
-          
-            // Get keywords from query string
-            const query = new URLSearchParams(window.location.search);
-            const keywordParam = query.get("keywords"); // e.g. "1,2,3"
-            const keywords = keywordParam ? keywordParam.split(',').map(k => parseInt(k)) : [];
-          
-            return {
-              score,
-              total_questions,
-              time_taken,
-              keywords,
-              responses
-            };
-          }
+        const payload = generateResultsPayload();
+        sendResultsToBackend(payload);
           
 
         
       }
+    
+      function generateResultsPayload() {
+        const responses = [];
+    
+        questions.forEach((questionEl, index) => {
+            const questionId = parseInt(questionEl.dataset.questionId);
+            const correctInput = questionEl.querySelector('.form-check-input[data-correct]');
+            const correctAnswer = correctInput ? correctInput.value.trim().toUpperCase() : null;
+    
+            const userAnswerRaw = userAnswers[index] || '';
+            const userAnswer = userAnswerRaw.trim().toUpperCase();
+            const isCorrect = userAnswer === correctAnswer;
+    
+            responses.push({
+            question_id: questionId,
+            user_answer: userAnswer,
+            correct: isCorrect
+            });
+        });
+    
+        const score = responses.filter(r => r.correct).length;
+        const total_questions = questions.length;
+        const time_taken = Math.floor((quizEndTime - quizStartTime) / 1000);
+    
+        // Get keywords from query string
+        const query = new URLSearchParams(window.location.search);
+        const keywordParam = query.get("keywords"); // e.g. "1,2,3"
+        const keywords = keywordParam ? keywordParam.split(',').map(k => parseInt(k)) : [];
+    
+        return {
+            score,
+            total_questions,
+            time_taken,
+            keywords,
+            responses
+        };
+    }
+    function sendResultsToBackend(results) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch("/save-quiz/", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify(results)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+            console.log("Quiz saved. Attempt ID:", data.attempt_id);
+            } else {
+            console.error("Error saving quiz:", data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+        });
+    }
+      
       
   
     // Init
     showQuestion(current);
     quizStartTime = new Date();
+
   });
 
-function sendResultsToBackend(results) {
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-fetch("/save-quiz/", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/json",
-    "X-CSRFToken": csrfToken
-    },
-    body: JSON.stringify(results)
-})
-.then(response => response.json())
-.then(data => {
-    if (data.success) {
-    console.log("Quiz saved. Attempt ID:", data.attempt_id);
-    } else {
-    console.error("Error saving quiz:", data.error);
-    }
-})
-.catch(error => {
-    console.error("Fetch error:", error);
-});
-}
-  
