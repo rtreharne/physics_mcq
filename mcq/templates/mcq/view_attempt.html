@@ -1,0 +1,25 @@
+{% extends 'mcq/base.html' %}
+{% load custom_tags %}
+{% load time_filters %}
+{% block title %}Attempt Review{% endblock %}
+
+{% block content %}
+<h2>Quiz Review</h2>
+<p><strong>Date:</strong> {{ attempt.date_taken }}</p>
+<p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</p>
+<p><strong>Time taken:</strong> {{ attempt.time_taken_seconds|seconds_to_minutes }}</p>
+<hr>
+
+{% for r in responses %}
+  <div class="card mb-3 {% if r.correct %}border-success{% else %}border-danger{% endif %}">
+    <div class="card-body">
+      <h5 class="card-title">{{ r.question.question_text }}</h5>
+      <p><strong>Your answer:</strong> {{ r.user_answer }}</p>
+      <p><strong>Correct answer:</strong> {{ r.question.correct_option }}</p>
+      {% if r.question.explanation %}
+        <div class="alert alert-info">{{ r.question.explanation }}</div>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}

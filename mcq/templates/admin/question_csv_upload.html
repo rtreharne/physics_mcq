@@ -1,11 +1,15 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-  <h1>Upload Questions via CSV</h1>
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+    <input type="file" name="csv_files" multiple class="form-control mb-3" accept=".csv">
     <button type="submit" class="btn btn-primary">Upload</button>
   </form>
-  <p>CSV must include columns: <code>topic, keywords, exam_boards, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty</code></p>
+
+  <p class="mt-3">
+    <strong>Each CSV must include columns:</strong><br>
+    <code>topic, keywords, exam_boards, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty</code>
+  </p>
 {% endblock %}

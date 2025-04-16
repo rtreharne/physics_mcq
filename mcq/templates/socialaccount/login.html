@@ -1,0 +1,16 @@
+{% extends "mcq/base.html" %}
+{% load socialaccount %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+  <h2>Sign in to Physics MCQs</h2>
+  <p>Click below to sign in with your Google account:</p>
+  <p>Debug: Google login URL → {% provider_login_url 'google' process='login' %}</p>
+
+  <a href="{% provider_login_url 'google' process='login' %}" class="btn btn-lg btn-outline-primary mt-4">
+    Sign in with Google
+  </a>
+</div>
+{% endblock %}

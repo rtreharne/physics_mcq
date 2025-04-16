@@ -115,8 +115,13 @@ document.addEventListener("DOMContentLoaded", function () {
       
         let correctCount = 0;
         const totalQuestions = questions.length;
+          
       
         const reviewHTML = Array.from(questions).map((questionEl, index) => {
+
+          // Get difficulty from dataset
+          const difficulty = questionEl.dataset.difficulty || 'unknown';
+
           // Get correct input and label
           const correctInputEl = questionEl.querySelector('.form-check-input[data-correct]');
           const correctValue = correctInputEl ? correctInputEl.value.trim().toUpperCase() : null;
@@ -140,7 +145,16 @@ document.addEventListener("DOMContentLoaded", function () {
       
           return `
             <div class="card mb-4 shadow-sm ${isCorrect ? 'correct' : 'incorrect'}">
+            
               <div class="card-body">
+              <p class="mb-1">
+                <span class="badge ${
+                    difficulty === 'easy' ? 'bg-success' :
+                    difficulty === 'medium' ? 'bg-primary' :
+                    difficulty === 'hard' ? 'bg-warning text-dark' :
+                    difficulty === 'hardcore' ? 'bg-danger' : 'bg-secondary'
+                }">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
+                </p>
                 <h5 class="card-title">${questionText}</h5>
                 <p class="mb-1">
                   <strong>Your answer:</strong> ${userText} 

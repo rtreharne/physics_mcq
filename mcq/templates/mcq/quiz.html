@@ -16,11 +16,23 @@
 
 <div id="quiz-container">
   {% for question in questions %}
-    <div class="quiz-question" data-question-index="{{ forloop.counter0 }}" data-question-id="{{ question.id }}" style="{% if not forloop.first %}display:none;{% endif %}">
-
+    <div class="quiz-question" data-question-index="{{ forloop.counter0 }}" data-difficulty="{{ question.difficulty }}" data-question-id="{{ question.id }}" style="{% if not forloop.first %}display:none;{% endif %}">
+        <p class="text-muted mb-2">
+        <span class="badge 
+          {% if question.difficulty == 'easy' %}bg-success
+          {% elif question.difficulty == 'medium' %}bg-primary
+          {% elif question.difficulty == 'hard' %}bg-warning text-dark
+          {% elif question.difficulty == 'hardcore' %}bg-danger
+          {% else %}bg-secondary
+          {% endif %}">
+          {{ question.difficulty|title }}
+        </span>
+      </p>
       <h4>Q{{ forloop.counter }}: {{ question.question_text }}</h4>
 
-      <div class="mt-3">
+      
+
+      <div class="quiz-answers mt-3 answer-block-offset">
         {% with question_index=forloop.counter0 %}
             {% for letter in "ABCD" %}
                 {% with attr_name="option_"|add:letter|lower %}

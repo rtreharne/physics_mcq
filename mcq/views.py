@@ -6,8 +6,38 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 import json
-
 from .models import QuizAttempt, QuizResponse, Question, Keyword, Topic
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.shortcuts import redirect
+from django.urls import reverse
+
+
+def login_redirect(request):
+    return redirect('/accounts/google/login/?process=login')
+
+
+def download_pdf(request):
+    keyword_ids = request.GET.get('keywords', '')
+    keyword_ids = [int(k) for k in keyword_ids.split(',') if k.isdigit()]
+    
+    questions = Question.objects.filter(keywords__id__in=keyword_ids).distinct()
+
+    questions = list(questions)
+    questions.sort(key=lambda q: q.topic.name)  # Optional: grouped by topic
+
+    html_string = render_to_string('mcq/pdf_template.html', {
+        'questions': questions,
+    })
+
+    html = HTML(string=html_string)
+    pdf_file = html.write_pdf()
+
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="quiz_questions.pdf"'
+    return response
+
 
 def home(request):
     topics = Topic.objects.all().order_by('name')
@@ -97,3 +127,53 @@ def save_quiz_results(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def get_topic_accuracy(user):
+    responses = QuizResponse.objects.filter(attempt__user=user).select_related('question__topic')
+
+    topic_stats = {}
+
+    for r in responses:
+        topic = r.question.topic
+        if topic not in topic_stats:
+            topic_stats[topic] = {'correct': 0, 'total': 0}
+        topic_stats[topic]['total'] += 1
+        if r.correct:
+            topic_stats[topic]['correct'] += 1
+
+    accuracy_list = [
+        {
+            'topic': topic,
+            'correct': data['correct'],
+            'total': data['total'],
+            'accuracy': round((data['correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0
+        }
+        for topic, data in topic_stats.items()
+    ]
+
+    # ✅ Sort alphabetically by topic name
+    return sorted(accuracy_list, key=lambda x: x['topic'].name.lower())
+
+
+@login_required
+def quiz_history(request):
+    attempts = QuizAttempt.objects.filter(user=request.user).order_by('-date_taken')
+    topic_accuracy = get_topic_accuracy(request.user)
+
+    return render(request, 'mcq/quiz_history.html', {
+        'attempts': attempts,
+        'topic_accuracy': topic_accuracy
+    })
+
+from django.shortcuts import get_object_or_404
+
+@login_required
+def view_attempt(request, attempt_id):
+    attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
+    responses = attempt.responses.select_related('question')
+
+    return render(request, 'mcq/view_attempt.html', {
+        'attempt': attempt,
+        'responses': responses
+    })

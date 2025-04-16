@@ -3,31 +3,37 @@
 
 {% block content %}
 
-<h1 class="mb-4">Select Topics and Keywords</h1>
+<div class="bg-light p-4 rounded text-center mb-4 shadow-sm">
+  <h1 class="display-5 fw-bold mb-2">Build Your Physics MCQ</h1>
+  <p class="lead text-muted mb-0">Choose your topics and keywords to generate personalised A-level questions.</p>
+</div>
+
 
 <form method="get" action="{% url 'quiz' %}" id="keyword-form">
   <!-- Hidden input for final comma-separated list -->
   <input type="hidden" name="keywords" id="keywords-consolidated">
 
-  <div class="row bottom-buffer">
+  
+  <div class="row bottom-buffer bg-white p-4 rounded shadow-sm mb-5">
     {% for topic in topics %}
+
       <div class="col-12 col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 border-0 shadow-sm topic-card">
           <div class="card-body">
-            <!-- Topic title as clickable -->
-            <h5 class="card-title topic-title" data-topic="{{ topic.id }}" style="cursor: pointer;">
+            <h5 class="card-title topic-title text-primary" data-topic="{{ topic.id }}" style="cursor: pointer;">
               {{ topic.name }}
             </h5>
 
-            <!-- Keyword checkboxes -->
-            <div id="keywords-{{ topic.id }}">
+            <div id="keywords-{{ topic.id }}" class="keyword-wrap">
               {% for keyword in topic.keywords.all|dictsort:"name" %}
                 {% if keyword.visible %}
-                  <div class="form-check form-check-inline mb-2">
-                    <input class="form-check-input keyword-checkbox" type="checkbox"
-                          value="{{ keyword.id }}"
-                          id="keyword-{{ keyword.id }}"
-                          {% if keyword.id in selected_keywords %}checked{% endif %}>
+                  <div class="form-check form-check-inline keyword-check">
+                    <input class="form-check-input keyword-checkbox"
+                           type="checkbox"
+                           name="keywords_list"
+                           value="{{ keyword.id }}"
+                           id="keyword-{{ keyword.id }}"
+                           {% if keyword.id in selected_keywords %}checked{% endif %}>
                     <label class="form-check-label" for="keyword-{{ keyword.id }}">
                       {{ keyword.name }}
                     </label>
@@ -36,30 +42,36 @@
               {% empty %}
                 <p class="text-muted">No keywords</p>
               {% endfor %}
-
             </div>
+            
           </div>
         </div>
       </div>
     {% endfor %}
   </div>
 
+
   
   
 </form>
 
-<div class="bottom-bar d-flex justify-content-between align-items-center">
-  <!-- Settings button (left) -->
-  <button type="button" class="btn btn-primary btn-lg"
-          data-bs-toggle="modal" data-bs-target="#quizConfigModal">
-    Settings
-  </button>
+<div class="bottom-bar-container">
+  <div class="bottom-bar-content">
+    <button type="button" class="btn btn-primary btn-lg"
+            data-bs-toggle="modal" data-bs-target="#quizConfigModal">
+      Settings
+    </button>
 
-  <!-- Start Quiz button (right) -->
-  <button type="submit" form="keyword-form" class="btn btn-primary btn-lg">
-    Start Quiz
-  </button>
+    <button id="start-quiz-btn" type="submit" form="keyword-form" class="btn btn-primary btn-lg" disabled>
+      Start Quiz
+    </button>
+    
+    <button id="download-pdf-btn" type="button" class="btn btn-outline-secondary btn-lg" disabled>
+      Download PDF
+    </button>
+  </div>
 </div>
+
 
 <!-- Quiz Configuration Modal -->
 <div class="modal fade" id="quizConfigModal" tabindex="-1" aria-labelledby="quizConfigModalLabel" aria-hidden="true">
@@ -89,8 +101,26 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const topicTitles = document.querySelectorAll('.topic-title');
+    const keywordCheckboxes = document.querySelectorAll('input[name="keywords_list"]');
+    const startBtn = document.getElementById('start-quiz-btn');
+    const pdfBtn = document.getElementById('download-pdf-btn');
+    const form = document.getElementById("keyword-form");
 
+    // Enable/disable buttons based on keyword selection
+    function updateButtonStates() {
+      const anyChecked = Array.from(keywordCheckboxes).some(cb => cb.checked);
+      startBtn.disabled = !anyChecked;
+      pdfBtn.disabled = !anyChecked;
+    }
+
+    keywordCheckboxes.forEach(cb => {
+      cb.addEventListener("change", updateButtonStates);
+    });
+
+    updateButtonStates(); // Initial check on load
+
+    // Topic header click toggles all keywords
+    const topicTitles = document.querySelectorAll('.topic-title');
     topicTitles.forEach(title => {
       title.addEventListener('click', () => {
         const topicId = title.dataset.topic;
@@ -99,15 +129,29 @@
 
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
+
+        updateButtonStates(); // Update buttons when toggling all
       });
     });
 
-    // On form submit, consolidate checked values into hidden input
-    document.getElementById("keyword-form").addEventListener("submit", function (e) {
+    // On form submit, consolidate selected keywords into hidden input
+    form.addEventListener("submit", function () {
       const selected = Array.from(document.querySelectorAll('.keyword-checkbox:checked'))
                             .map(cb => cb.value);
       document.getElementById("keywords-consolidated").value = selected.join(",");
     });
+
+    // Handle PDF download
+    pdfBtn.addEventListener("click", function () {
+      const selected = Array.from(document.querySelectorAll('.keyword-checkbox:checked'))
+                            .map(cb => cb.value);
+      if (selected.length === 0) return;  // Just fail silently
+      const query = new URLSearchParams({ keywords: selected.join(',') });
+      window.open(`/download-pdf/?${query.toString()}`, '_blank');
+    });
   });
 </script>
+
+
+
 {% endblock %}

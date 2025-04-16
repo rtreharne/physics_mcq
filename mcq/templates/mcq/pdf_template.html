@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; }
+    h2 { margin-top: 2rem; }
+    .question { margin-bottom: 1.5rem; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <h1>Quiz Questions</h1>
+
+  {% for q in questions %}
+    <div class="question">
+      <strong>Q{{ forloop.counter }}:</strong> {{ q.question_text }}<br>
+      A. {{ q.option_a }}<br>
+      B. {{ q.option_b }}<br>
+      C. {{ q.option_c }}<br>
+      D. {{ q.option_d }}
+    </div>
+  {% endfor %}
+
+  <div class="page-break"></div>
+
+  <h1>Answers & Explanations</h1>
+
+  {% for q in questions %}
+    <div class="question">
+      <strong>Q{{ forloop.counter }}:</strong> Correct answer: {{ q.correct_option }}<br>
+      {% if q.explanation %}
+        <em>{{ q.explanation }}</em>
+      {% endif %}
+    </div>
+  {% endfor %}
+</body>
+</html>

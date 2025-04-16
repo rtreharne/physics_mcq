@@ -5,7 +5,7 @@ from django.contrib import messages
 import csv, io
 
 from .models import Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse
-from .forms import TopicCSVUploadForm, QuestionCSVUploadForm
+from .forms import TopicCSVUploadForm
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
@@ -63,18 +63,17 @@ class QuestionAdmin(admin.ModelAdmin):
 
     def upload_csv(self, request):
         if request.method == "POST":
-            form = QuestionCSVUploadForm(request.POST, request.FILES)
-            if form.is_valid():
-                csv_file = form.cleaned_data['csv_file']
-                try:
-                    decoded = csv_file.read().decode('utf-8')
+            files = request.FILES.getlist("csv_files")
+            total_imported = 0
+
+            try:
+                for f in files:
+                    decoded = f.read().decode("utf-8")
                     io_string = io.StringIO(decoded)
                     reader = csv.DictReader(io_string)
 
-                    count = 0
                     for row in reader:
-                        topic_name = row['topic'].strip()
-                        topic, _ = Topic.objects.get_or_create(name=topic_name)
+                        topic, _ = Topic.objects.get_or_create(name=row['topic'].strip())
 
                         q = Question.objects.create(
                             topic=topic,
@@ -89,37 +88,31 @@ class QuestionAdmin(admin.ModelAdmin):
                         )
 
                         # Keywords
-                        keywords_raw = row.get('keywords', '')
-                        for kw_name in keywords_raw.split(';'):
-                            kw_name = kw_name.strip()
-                            if kw_name:
-                                keyword, _ = Keyword.objects.get_or_create(name=kw_name, topic=topic)
+                        for kw in row.get('keywords', '').split(';'):
+                            kw = kw.strip()
+                            if kw:
+                                keyword, _ = Keyword.objects.get_or_create(name=kw, topic=topic)
                                 q.keywords.add(keyword)
 
-                        # Exam Boards
-                        boards_raw = row.get('exam_boards', '')
-                        for board_name in boards_raw.split(';'):
-                            board_name = board_name.strip()
-                            if board_name:
-                                board, _ = ExamBoard.objects.get_or_create(name=board_name)
-                                q.exam_boards.add(board)
+                        # Exam boards
+                        for board in row.get('exam_boards', '').split(';'):
+                            board = board.strip()
+                            if board:
+                                eb, _ = ExamBoard.objects.get_or_create(name=board)
+                                q.exam_boards.add(eb)
 
-                        q.save()
-                        count += 1
+                        total_imported += 1
 
-                    self.message_user(request, f"Successfully imported {count} questions.", level=messages.SUCCESS)
-                    return redirect("..")
-                except Exception as e:
-                    self.message_user(request, f"Error: {e}", level=messages.ERROR)
-                    return redirect("..")
-        else:
-            form = QuestionCSVUploadForm()
+                self.message_user(request, f"Successfully imported {total_imported} questions.", level=messages.SUCCESS)
+                return redirect("..")
 
-        context = {
-            'form': form,
-            'title': 'Upload Questions via CSV',
-        }
-        return render(request, 'admin/question_csv_upload.html', context)
+            except Exception as e:
+                self.message_user(request, f"Error during import: {e}", level=messages.ERROR)
+                return redirect("..")
+
+        return render(request, "admin/question_csv_upload.html", {
+            'title': 'Upload Questions via CSV'
+        })
     
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):
