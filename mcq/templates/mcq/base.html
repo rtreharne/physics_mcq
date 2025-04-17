@@ -25,9 +25,6 @@
       
           <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
             <ul class="navbar-nav ms-auto">
-                <a href="{% provider_login_url 'google' %}" class="btn btn-primary">
-                    Sign in with Google
-                  </a>
               {% if user.is_authenticated %}
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'quiz_history' %}">📊 My Quiz History</a>
@@ -35,13 +32,9 @@
                 <li class="nav-item">
                   <span class="nav-link disabled">Hi, {{ user.first_name|default:user.username }}</span>
                 </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
-                </li>
+        
               {% else %}
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'account_login' %}">Login</a>
-              </li>
+          
       
 {% endif %}
 

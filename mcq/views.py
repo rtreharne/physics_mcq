@@ -12,10 +12,12 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from .models import QuizAttempt, QuizResponse, Question, Keyword
+from django.contrib.auth.decorators import login_required
 
-
-def login_redirect(request):
-    return redirect('/accounts/google/login/?process=login')
 
 
 def download_pdf(request):
@@ -76,11 +78,7 @@ def filtered_quiz(request):
 def result(request):
     return render(request, 'mcq/result.html')
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
-from .models import QuizAttempt, QuizResponse, Question, Keyword
-from django.contrib.auth.decorators import login_required
+
 
 @require_POST
 @csrf_protect
