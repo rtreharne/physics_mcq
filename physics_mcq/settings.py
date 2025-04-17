@@ -49,12 +49,14 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
+SOCIALACCOUNT_ADAPTER = 'mcq.adapters.InstantLoginAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_LOGOUT_ON_GET = True
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_ON_GET = True
 
-SOCIALACCOUNT_AUTO_SIGNUP = True
-ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter" 
+
 
 
 ACCOUNT_LOGIN_METHODS = {'email'}
