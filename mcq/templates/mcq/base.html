@@ -24,19 +24,20 @@
           </button>
       
           <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
-            <ul class="navbar-nav ms-auto">
+            <div class="ms-auto">
               {% if user.is_authenticated %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'quiz_history' %}">📊 My Quiz History</a>
-                </li>
-                <li class="nav-item">
-                  <span class="nav-link disabled">Hi, {{ user.first_name|default:user.username }}</span>
-                </li>
-        
+                <a href="{% url 'quiz_history' %}" class="btn btn-outline-light me-2">
+                  My Quizzes
+                </a>
+                <a href="{% url 'account_logout' %}" class="btn btn-outline-warning">
+                  Log out
+                </a>
               {% else %}
-          
-      
-{% endif %}
+                <a href="{% provider_login_url 'google' process='login' %}" class="btn btn-outline-light">
+                  Login with Google
+                </a>
+              {% endif %}
+            </div>
 
     </nav>
 
