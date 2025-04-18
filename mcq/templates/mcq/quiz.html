@@ -28,7 +28,7 @@
           {{ question.difficulty|title }}
         </span>
       </p>
-      <h4>Q{{ forloop.counter }}: {{ question.question_text }}</h4>
+      <h4>Q{{ forloop.counter }}: {{ question.question_text|safe }}</h4>
 
       
 
