@@ -18,6 +18,19 @@ import json
 from .models import QuizAttempt, QuizResponse, Question, Keyword
 from django.contrib.auth.decorators import login_required
 
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
+def create_superuser(request):
+    User = get_user_model()
+    if not User.objects.filter(email='admin@physicsmcqs.com').exists():
+        User.objects.create_superuser(
+            username='admin',
+            email='admin@physicsmcqs.com',
+            password='ChangeThis123!',
+        )
+        return HttpResponse("✅ Superuser created.")
+    return HttpResponse("ℹ️ Superuser already exists.")
 
 
 def download_pdf(request):
