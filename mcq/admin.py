@@ -4,8 +4,13 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 import csv, io
 
-from .models import Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse
+from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse
 from .forms import TopicCSVUploadForm
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'anonymous_name')
+    search_fields = ('user__email', 'anonymous_name')
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
