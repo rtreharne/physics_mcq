@@ -245,6 +245,22 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
     margin-right: 0.4rem;
     transform: scale(0.9);  /* shrink checkbox slightly */
   }
+
+  .navbar .btn-outline-light:hover,
+  .navbar .btn-outline-light:focus {
+    background-color: #ffffff !important;  /* White background */
+    color: #000000 !important;             /* Force black text */
+    border-color: #ffffff !important;      /* Optional: match border */
+  }
   
   
-      
+@media (max-width: 767.98px) {
+  .navbar .btn {
+    width: 100%;
+  }
+
+  .navbar .text-white {
+    text-align: center;
+    width: 100%;
+  }
+}

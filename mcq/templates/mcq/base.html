@@ -14,45 +14,57 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
-        <div class="container-fluid">
-          <a class="navbar-brand fw-bold" href="{% url 'home' %}">PhysicsMCQs.com</a>
-      
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
-            aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-      
-          <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
-            <div class="ms-auto">
-              {% if user.is_authenticated %}
-              <div class="d-flex align-items-center gap-3">
-                <span class="text-white">
-                  👤 {{ user.profile.anonymous_name }}
-                </span>
-                <div class="navbar-text text-white me-3">
-                  🔗 Chain: {{ user.profile.chain_length }} days
-                </div>
-                <a href="{% url 'quiz_history' %}" class="btn btn-outline-light">
-                  My Quizzes
-                </a>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'leaderboard' %}">Leaderboard</a>
-                </li>
-                <a href="{% url 'account_logout' %}" class="btn btn-outline-warning">
-                  Log out
-                </a>
-              </div>
-            {% else %}
-              <div class="d-flex align-items-center">
-                <a href="{% provider_login_url 'google' %}" class="btn btn-outline-light">
-                  Sign in with Google
-                </a>
-              </div>
-            {% endif %}
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+    <div class="container-fluid">
+      <!-- Brand: left-aligned -->
+      <a class="navbar-brand fw-bold" href="{% url 'home' %}">PhysicsMCQs.com</a>
+  
+      <!-- Mobile toggle button -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
+        aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <!-- Collapsible content -->
+      <div class="collapse navbar-collapse" id="navbarMenu">
+        <!-- Push right -->
+        <div class="ms-auto w-100">
+          {% if user.is_authenticated %}
+            <div class="d-flex flex-column flex-lg-row align-items-center align-items-lg-center justify-content-lg-end gap-2 gap-lg-3 text-center text-lg-end py-2 py-lg-0">
+  
+              <span class="text-white">
+                👤 {{ user.profile.anonymous_name }}
+              </span>
+  
+              <span class="text-white">
+                🔗 Chain: {{ user.profile.chain_length }} days
+              </span>
+  
+              <a href="{% url 'quiz_history' %}" class="btn btn-outline-light">
+                My Quizzes
+              </a>
+  
+              <a href="{% url 'leaderboard' %}" class="btn btn-outline-light">
+                Leaderboard
+              </a>
+  
+              <a href="{% url 'account_logout' %}" class="btn btn-outline-warning">
+                Log out
+              </a>
             </div>
-
-    </nav>
+          {% else %}
+            <div class="d-flex flex-column flex-lg-row align-items-center justify-content-lg-end gap-2 text-center py-2 py-lg-0">
+              <a href="{% provider_login_url 'google' %}" class="btn btn-outline-light">
+                Sign in with Google
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  
 
     {% if not user.is_authenticated %}
     <div id="login-banner" class="alert alert-warning text-center mb-3" role="alert">
