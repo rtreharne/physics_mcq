@@ -9,10 +9,14 @@
 {% csrf_token %}
 <meta name="csrf-token" content="{{ csrf_token }}">
 
+
+
+
 <!-- Progress Display -->
 <div class="mb-3">
   <strong id="quiz-progress">Question 1 of {{ questions|length }}</strong>
 </div>
+
 
 <div id="quiz-container">
   {% for question in questions %}
@@ -75,7 +79,10 @@
 <!-- Buffer to prevent content being hidden -->
 <div class="bottom-buffer"></div>
 
-<div id="quiz-meta" data-time-per-question="{{ time_per_question|default:1|floatformat:2 }}"></div>
+<div id="quiz-meta"
+     data-time-per-question="{{ time_per_question|default:1|floatformat:2 }}"
+     data-user-authenticated="{{ user.is_authenticated }}">
+</div>
 
 <script src="{% static 'js/quiz.js' %}"></script>
 

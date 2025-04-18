@@ -34,12 +34,23 @@
                 </a>
               {% else %}
                 <a href="{% provider_login_url 'google' %}" class="btn btn-outline-light">
-                  Login with Google
+                  Sign in with Google
                 </a>
               {% endif %}
             </div>
 
     </nav>
+
+    {% if not user.is_authenticated %}
+    <div id="login-banner" class="alert alert-warning text-center mb-3" role="alert">
+      <strong>Record your progress. Smash your targets.</strong> It's all free, baby!
+      <a href="/accounts/google/login/?process=login&next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-primary ms-2">
+        Sign in with Google
+      </a>
+    </div>
+    {% endif %}
+  
+
 
     <br>
 
