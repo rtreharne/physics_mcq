@@ -7,6 +7,7 @@
 <h2>Quiz Review</h2>
 <p><strong>Date:</strong> {{ attempt.date_taken }}</p>
 <p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</p>
+<p><strong>Points:</strong> {{ attempt.points }}</p>
 <p><strong>Time taken:</strong> {{ attempt.time_taken_seconds|seconds_to_minutes }}</p>
 <hr>
 

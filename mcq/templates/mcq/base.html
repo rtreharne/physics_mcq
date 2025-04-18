@@ -30,9 +30,15 @@
                 <span class="text-white">
                   👤 {{ user.profile.anonymous_name }}
                 </span>
+                <div class="navbar-text text-white me-3">
+                  🔗 Chain: {{ user.profile.chain_length }} days
+                </div>
                 <a href="{% url 'quiz_history' %}" class="btn btn-outline-light">
                   My Quizzes
                 </a>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'leaderboard' %}">Leaderboard</a>
+                </li>
                 <a href="{% url 'account_logout' %}" class="btn btn-outline-warning">
                   Log out
                 </a>

@@ -7,6 +7,20 @@
 
 {% block content %}
 
+<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+  <div class="mb-2 mb-md-0">
+    <strong>🏆 Your Progress</strong>
+  </div>
+  <div>
+    <span class="badge bg-primary me-2">
+      This Month: {{ points_monthly }} pts (Rank #{{ monthly_rank|default:"–" }})
+    </span>
+    <span class="badge bg-secondary">
+      All Time: {{ points_all_time }} pts (Rank #{{ all_time_rank|default:"–" }})
+    </span>
+  </div>
+</div>
+
 {% if topic_accuracy %}
 
 <h2 class="mt-5">Average Accuracy by Topic</h2>
@@ -73,6 +87,7 @@
       <tr>
         <th>Date</th>
         <th>Score</th>
+        <th>Points</th>
         <th>Time Taken</th>
         <th>Quiz</th>
 
@@ -82,8 +97,10 @@
       {% for attempt in attempts %}
         <tr>
           <td>{{ attempt.date_taken|date:"d M Y H:i" }}</td>
-          <td>{{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</td>          <td>{{ attempt.time_taken_seconds|seconds_to_minutes }}</td>
-
+          <td>{{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</td>          
+          <td>{{ attempt.points }}</td>
+          
+          <td>{{ attempt.time_taken_seconds|seconds_to_minutes }}</td>
           
           <td>
             <a href="{% url 'view_attempt' attempt.id %}" class="btn btn-sm btn-outline-primary">View</a>

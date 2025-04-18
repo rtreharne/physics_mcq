@@ -1,10 +1,28 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now
+from django.shortcuts import render
+from datetime import timedelta
+
 
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     anonymous_name = models.CharField(max_length=150, unique=True)
+    points = models.PositiveIntegerField(default=0)
+    chain_length = models.IntegerField(default=0)
+    last_chain_date = models.DateField(null=True, blank=True)
+
+    def update_chain(self):
+        today = now().date()
+        if self.last_chain_date == today:
+            return  # Already updated today
+        elif self.last_chain_date == today - timedelta(days=1):
+            self.chain_length += 1
+        else:
+            self.chain_length = 1  # Reset chain
+        self.last_chain_date = today
+        self.save()
 
     def __str__(self):
         return self.anonymous_name
@@ -60,6 +78,7 @@ class QuizAttempt(models.Model):
     total_questions = models.IntegerField()
     time_taken_seconds = models.IntegerField()
     keywords = models.ManyToManyField('Keyword', blank=True)
+    points = models.IntegerField(default=0) 
 
     def __str__(self):
         return f"QuizAttempt #{self.id} - {self.score}/{self.total_questions}"

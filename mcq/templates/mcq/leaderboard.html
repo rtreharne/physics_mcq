@@ -1,0 +1,37 @@
+{% extends "mcq/base.html" %}
+{% block title %}Leaderboard - Physics MCQs{% endblock %}
+{% block content %}
+
+
+<h1 class="mb-4">Leaderboards</h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <h3>This Month</h3>
+    <ol class="list-group list-group-numbered">
+      {% for entry in monthly_leaderboard %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ entry.user__profile__anonymous_name }}
+          <span class="badge bg-primary rounded-pill">{{ entry.points }}</span>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No data yet</li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  <div class="col-md-6">
+    <h3>All Time</h3>
+    <ol class="list-group list-group-numbered">
+      {% for entry in all_time_leaderboard %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ entry.user__profile__anonymous_name }}
+          <span class="badge bg-success rounded-pill">{{ entry.points }}</span>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No data yet</li>
+      {% endfor %}
+    </ol>
+  </div>
+</div>
+{% endblock %}

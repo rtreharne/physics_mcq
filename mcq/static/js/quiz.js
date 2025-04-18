@@ -171,10 +171,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const timeTakenSeconds = Math.floor((quizEndTime - quizStartTime) / 1000);
         const mins = Math.floor(timeTakenSeconds / 60);
         const secs = timeTakenSeconds % 60;
+
+        const chainLength = parseInt(document.getElementById("quiz-meta").dataset.chainLength || "1");
+        const points = correctCount * 100 * Math.min(chainLength, 7);
+
+
+        
       
         const resultsHeader = `
           <h3 class="mb-4">Quiz Results</h3>
           <p><strong>Score:</strong> ${correctCount} / ${totalQuestions} (${percentage}%)</p>
+          <p><strong>Points Earned:</strong> ${points}</p>
           <p><strong>Total Time:</strong> ${mins}m ${secs}s</p>
           <hr class="my-4">
         `;
@@ -222,13 +229,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const query = new URLSearchParams(window.location.search);
         const keywordParam = query.get("keywords"); // e.g. "1,2,3"
         const keywords = keywordParam ? keywordParam.split(',').map(k => parseInt(k)) : [];
-    
+        
+        const chainLength = parseInt(document.getElementById("quiz-meta").dataset.chainLength || "1");
+        const points = score * 100 * Math.min(chainLength, 7);
+        // Get points from the score
+
         return {
             score,
             total_questions,
             time_taken,
             keywords,
-            responses
+            responses,
+            points,
         };
     }
     function sendResultsToBackend(results) {

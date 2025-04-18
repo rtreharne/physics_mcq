@@ -81,7 +81,9 @@
 
 <div id="quiz-meta"
      data-time-per-question="{{ time_per_question|default:1|floatformat:2 }}"
-     data-user-authenticated="{{ user.is_authenticated }}">
+     data-user-authenticated="{{ user.is_authenticated }}"
+     data-chain-length="{{ chain_length }}">
+     
 </div>
 
 <script src="{% static 'js/quiz.js' %}"></script>

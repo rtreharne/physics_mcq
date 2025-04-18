@@ -9,6 +9,8 @@ urlpatterns = [
     path('my-quizzes/', views.quiz_history, name='quiz_history'),
     path('my-quizzes/<int:attempt_id>/', views.view_attempt, name='view_attempt'),
     path('download-pdf/', views.download_pdf, name='download_pdf'),
+    path('leaderboard/', views.leaderboard_view, name='leaderboard'),
+
 
     
 ]
