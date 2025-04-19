@@ -32,7 +32,7 @@
           {{ question.difficulty|title }}
         </span>
       </p>
-      <h4>Q{{ forloop.counter }}: {{ question.question_text|safe }}</h4>
+      <h4>{{ question.question_text|safe }}</h4>
 
       
 
@@ -84,6 +84,31 @@
      data-user-authenticated="{{ user.is_authenticated }}"
      data-chain-length="{{ chain_length }}">
      
+</div>
+
+<!-- Buy Me a Coffee Modal -->
+<div class="modal fade" id="coffeeModal" tabindex="-1" aria-labelledby="coffeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-header">
+        <h5 class="modal-title w-100" id="coffeeModalLabel">Enjoying PhysicsMCQs?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        I created PhysicsMCQs.org to keep high-quality, exam-style revision free for everyone — forever. If the site’s helped you or your students, please consider buying me a ☕️ to support its growth and running costs. Every contribution makes a real difference. Thanks!
+      
+        <br><br>
+        <em>– <a href="https://www.linkedin.com/in/robtreharne" target="_blank">Dr. Robert Treharne</a></em>
+      </div>
+      
+      
+      <div class="modal-footer justify-content-center">
+        <a href="https://www.buymeacoffee.com/robtreharne" class="btn btn-warning" target="_blank">
+          Buy Me a Coffee
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="{% static 'js/quiz.js' %}"></script>

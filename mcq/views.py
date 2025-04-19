@@ -22,17 +22,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from datetime import datetime
-
-def create_superuser(request):
-    User = get_user_model()
-    if not User.objects.filter(email='admin@physicsmcqs.com').exists():
-        User.objects.create_superuser(
-            username='admin',
-            email='admin@physicsmcqs.com',
-            password='ChangeThis123!',
-        )
-        return HttpResponse("✅ Superuser created.")
-    return HttpResponse("ℹ️ Superuser already exists.")
+from django.db.models import Sum, Avg, Count, F
 
 
 def download_pdf(request):
@@ -154,9 +144,16 @@ def save_quiz_results(request):
 
         attempt.points = attempt.points * profile.chain_length
         attempt.save()
+        attempt_count = QuizAttempt.objects.filter(user=user).count()
+    else:
+        attempt_count = 0  # anonymous
 
 
-    return JsonResponse({'success': True, 'attempt_id': attempt.id})
+    return JsonResponse({
+        'success': True, 
+        'attempt_id': attempt.id,
+        'attempt_count': attempt_count,
+        })
 
     # except Exception as e:
     #     return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -220,41 +217,48 @@ def get_topic_accuracy(user):
 @login_required
 def quiz_history(request):
     user = request.user
-    profile = Profile.objects.get(user=user)
     attempts = QuizAttempt.objects.filter(user=user).order_by('-date_taken')
     topic_accuracy = get_topic_accuracy(user)
+    profile = Profile.objects.get(user=user)
 
-    # All-time points
-    points_all_time = attempts.aggregate(total=Sum('points'))['total'] or 0
+    # All-time points & ranking
+    points_all_time = profile.points
+    all_time_leaderboard = (
+        Profile.objects.annotate(total_points=Sum('user__quizattempt__points'))
+        .order_by('-total_points')
+        .values_list('user_id', flat=True)
+    )
+    all_time_rank = list(all_time_leaderboard).index(user.id) + 1
 
-    # All-time rank
-    all_profiles = Profile.objects.annotate(
-        total_points=Sum('user__quizattempt__points')
-    ).order_by('-total_points')
-
-    all_time_rank = list(all_profiles.values_list('user_id', flat=True)).index(user.id) + 1
-
-    # Monthly points
+    # Monthly points & ranking
     start_of_month = datetime(now().year, now().month, 1)
     monthly_attempts = QuizAttempt.objects.filter(date_taken__gte=start_of_month)
-
     monthly_scores = (
         monthly_attempts.values('user')
         .annotate(monthly_points=Sum('points'))
         .order_by('-monthly_points')
     )
-
     user_monthly = next((entry for entry in monthly_scores if entry['user'] == user.id), None)
+    monthly_rank = (
+        list(monthly_scores).index(user_monthly) + 1 if user_monthly else None
+    )
     points_monthly = user_monthly['monthly_points'] if user_monthly else 0
-    monthly_rank = list(monthly_scores).index(user_monthly) + 1 if user_monthly else None
+
+    # New Stats
+    total_questions = attempts.aggregate(total=Sum('total_questions'))['total'] or 0
+    avg_score = round(
+        attempts.aggregate(avg=Avg(F('score') * 100.0 / F('total_questions')))['avg'] or 0, 1
+    )
 
     return render(request, 'mcq/quiz_history.html', {
         'attempts': attempts,
         'topic_accuracy': topic_accuracy,
-        'points_all_time': points_all_time,
         'points_monthly': points_monthly,
-        'all_time_rank': all_time_rank,
         'monthly_rank': monthly_rank,
+        'points_all_time': points_all_time,
+        'all_time_rank': all_time_rank,
+        'total_questions': total_questions,
+        'avg_score': avg_score,
     })
 
 

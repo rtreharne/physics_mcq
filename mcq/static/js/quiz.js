@@ -258,8 +258,15 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.success) {
             console.log("Quiz saved. Attempt ID:", data.attempt_id);
+
+            const attemptCount = data.attempt_count || 0;
+            if (attemptCount > 0 && attemptCount % 5 === 0) {
+              const coffeeModal = new bootstrap.Modal(document.getElementById('coffeeModal'));
+              coffeeModal.show();
+            }
+
             } else {
-            console.error("Error saving quiz:", data.error);
+              console.error("Error saving quiz:", data.error);
             }
         })
         .catch(error => {

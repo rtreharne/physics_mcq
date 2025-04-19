@@ -1,4 +1,4 @@
-# ⚛️ PhysicsMCQs.com
+# ⚛️ PhysicsMCQs.org
 
 A modern, mobile-first Django web application for A-Level Physics multiple-choice questions — tailored for students, teachers, and tutors. Create quizzes, track performance, download PDFs, and log in with Google.
 
@@ -114,7 +114,7 @@ Visit: [http://localhost:8000](http://localhost:8000)
 - [ ] Export quiz attempts to CSV
 - [ ] Add fuzzy search and keyword/tag filters
 - [ ] Add spaced repetition / smart revision logic
-- [ ] Launch public version at [physicsmcqs.com](http://physicsmcqs.com)
+- [ ] Launch public version at [physicsmcqs.org](http://physicsmcqs.org)
 
 ---
 

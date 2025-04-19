@@ -1,12 +1,15 @@
 {% extends 'mcq/base.html' %}
-{% block title %}Filter Questions - Physics MCQs{% endblock %}
+{% block title %}PhysicsMCQs - Filter Questions{% endblock %}
 
 {% block content %}
 
-<div class="bg-light p-4 rounded text-center mb-4 shadow-sm">
-  <h1 class="display-5 fw-bold mb-2">Build Your Physics MCQ</h1>
-  <p class="lead text-muted mb-0">Choose your topics and keywords to generate personalised A-level questions.</p>
+<!-- Hero Section -->
+<div class="hero-section">
+  <h1 class="display-4 fw-bold">Build Your Physics MCQ</h1>
+  <p class="lead">🎯 Select topics and keywords to generate personalized A-Level Physics quizzes instantly.</p>
 </div>
+
+
 
 
 <form method="get" action="{% url 'quiz' %}" id="keyword-form">
@@ -20,9 +23,12 @@
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 shadow-sm topic-card">
           <div class="card-body">
-            <h5 class="card-title topic-title text-primary" data-topic="{{ topic.id }}" style="cursor: pointer;">
+            <h5 class="card-title topic-title text-primary fw-bold fs-5 d-flex align-items-center justify-content-between"
+                data-topic="{{ topic.id }}" style="cursor: pointer;">
               {{ topic.name }}
+
             </h5>
+
 
             <div id="keywords-{{ topic.id }}" class="keyword-wrap">
               {% for keyword in topic.keywords.all|dictsort:"name" %}
@@ -55,23 +61,18 @@
   
 </form>
 
+<!-- Bottom Bar -->
 <div class="bottom-bar-container">
   <div class="bottom-bar-content">
-    <button type="button" class="btn btn-primary btn-lg"
-            data-bs-toggle="modal" data-bs-target="#quizConfigModal">
-      Settings
+    <button id="start-quiz-btn" type="submit" form="keyword-form" class="btn btn-primary btn-lg" disabled>
+      🚀 Start Quiz
     </button>
 
-    <button id="start-quiz-btn" type="submit" form="keyword-form" class="btn btn-primary btn-lg" disabled>
-      Start Quiz
-    </button>
-    
     <button id="download-pdf-btn" type="button" class="btn btn-outline-secondary btn-lg" disabled>
-      Download PDF
+      📄 Download PDF
     </button>
   </div>
 </div>
-
 
 <!-- Quiz Configuration Modal -->
 <div class="modal fade" id="quizConfigModal" tabindex="-1" aria-labelledby="quizConfigModalLabel" aria-hidden="true">

@@ -7,30 +7,36 @@
 
 {% block content %}
 
-<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-  <div class="mb-2 mb-md-0">
-    <strong>🏆 Your Progress</strong>
-  </div>
-  <div>
-    <span class="badge bg-primary me-2">
-      This Month: {{ points_monthly }} pts (Rank #{{ monthly_rank|default:"–" }})
-    </span>
-    <span class="badge bg-secondary">
-      All Time: {{ points_all_time }} pts (Rank #{{ all_time_rank|default:"–" }})
-    </span>
+<div class="alert alert-info mb-4">
+  <div class="text-center text-md-start mb-3">
+    <strong class="d-block mb-2">🏆 Your Progress</strong>
+
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+      <span class="badge bg-primary px-3 py-2">
+        This Month: {{ points_monthly }} pts<br class="d-md-none"/> (Rank #{{ monthly_rank|default:"–" }})
+      </span>
+      <span class="badge bg-secondary px-3 py-2">
+        All Time: {{ points_all_time }} pts<br class="d-md-none"/> (Rank #{{ all_time_rank|default:"–" }})
+      </span>
+      <span class="badge bg-success px-3 py-2">
+        Total Questions: {{ total_questions }}
+      </span>
+      <span class="badge bg-info text-dark px-3 py-2">
+        Avg. Score: {{ avg_score }}%
+      </span>
+      <span class="badge bg-warning text-dark px-3 py-2">
+        🔗 Chain: {{ user.profile.chain_length }} day{{ user.profile.chain_length|pluralize }}
+      </span>
+    </div>
   </div>
 </div>
 
 {% if topic_accuracy %}
 
-<h2 class="mt-5">Average Accuracy by Topic</h2>
+<h2 class="mt-5">Accuracy by Topic</h2>
 
 
-<ul class="list-inline">
-  <li class="list-inline-item"><span class="badge bg-success">80%+</span> Strong</li>
-  <li class="list-inline-item"><span class="badge bg-warning text-dark">51–79%</span> Needs revision</li>
-  <li class="list-inline-item"><span class="badge bg-danger">50% or less</span> Focus urgently</li>
-</ul>
+
 
   <table class="table table-bordered mt-3">
     <thead>
@@ -73,6 +79,12 @@
       </tbody>
       
   </table>
+
+  <div class="mb-3 d-flex flex-wrap gap-3">
+    <div><span class="badge bg-success">80%+</span> <span class="text-muted">Strong</span></div>
+    <div><span class="badge bg-warning text-dark">51–79%</span> <span class="text-muted">Needs revision</span></div>
+    <div><span class="badge bg-danger">≤50%</span> <span class="text-muted">Focus urgently</span></div>
+  </div>
 {% else %}
   <p class="text-muted">No topic accuracy data yet.</p>
 {% endif %}
