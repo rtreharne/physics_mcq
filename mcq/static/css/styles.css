@@ -324,4 +324,17 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
   margin-bottom: 2rem;
 }
 
+.topic-question-count {
+  font-size: 0.85rem;
+  color: #ffffff; /* Bootstrap's text-muted color */
+  margin-top: 0.25rem;
+}
+
+.hero-subtext {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85); /* subtle white */
+  margin-top: 1rem;
+}
+
+
 

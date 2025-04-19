@@ -4,9 +4,15 @@
 {% block content %}
 
 <!-- Hero Section -->
-<div class="hero-section">
+<div class="hero-section mb-4">
   <h1 class="display-4 fw-bold">Build Your Physics MCQ</h1>
-  <p class="lead">🎯 Select topics and keywords to generate personalized A-Level Physics quizzes instantly.</p>
+  <p class="lead">
+    🎯 Select topics and keywords to generate personalized A-Level Physics quizzes instantly.<br>
+ 
+  </p>
+  <p class="hero-subtext mt-3">
+    Over <strong>{{ total_questions }}</strong> questions available and growing!
+  </p>
 </div>
 
 
@@ -23,10 +29,10 @@
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 shadow-sm topic-card">
           <div class="card-body">
-            <h5 class="card-title topic-title text-primary fw-bold fs-5 d-flex align-items-center justify-content-between"
+            <h5 class="card-title topic-title text-primary fw-bold fs-5 d-flex flex-column"
                 data-topic="{{ topic.id }}" style="cursor: pointer;">
-              {{ topic.name }}
-
+              <span>{{ topic.name }}</span>
+              <small class="text-muted mt-1" style="font-size: 0.85rem;">{{ topic.question_count }} questions available</small>
             </h5>
 
 
@@ -41,7 +47,7 @@
                            id="keyword-{{ keyword.id }}"
                            {% if keyword.id in selected_keywords %}checked{% endif %}>
                     <label class="form-check-label" for="keyword-{{ keyword.id }}">
-                      {{ keyword.name }}
+                      {{ keyword.name }} <span class="badge bg-secondary">{{ keyword.question_count }}</span>
                     </label>
                   </div>
                 {% endif %}

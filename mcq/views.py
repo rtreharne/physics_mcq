@@ -28,11 +28,19 @@ from django.db.models import Sum, Avg, Count, F
 def download_pdf(request):
     keyword_ids = request.GET.get('keywords', '')
     keyword_ids = [int(k) for k in keyword_ids.split(',') if k.isdigit()]
-    
+
+    num_questions = int(request.GET.get('num_questions', 10))  # get from query string
+
+    # Filter questions by selected keywords
     questions = Question.objects.filter(keywords__id__in=keyword_ids).distinct()
 
+    # Convert to list, shuffle, and trim to desired count
     questions = list(questions)
-    questions.sort(key=lambda q: q.topic.name)  # Optional: grouped by topic
+    random.shuffle(questions)
+    questions = questions[:num_questions]
+
+    # Optional: sort by topic if you still want that
+    questions.sort(key=lambda q: q.topic.name)
 
     html_string = render_to_string('mcq/pdf_template.html', {
         'questions': questions,
@@ -47,13 +55,21 @@ def download_pdf(request):
 
 
 def home(request):
-    
-    topics = Topic.objects.all().order_by('name')
+    topics = Topic.objects.prefetch_related('keywords').order_by('name')
+    total_questions = Question.objects.count()
+
     selected_keywords = request.GET.get('keywords', '')
     selected_keywords = list(map(int, selected_keywords.split(','))) if selected_keywords else []
+
+    for topic in topics:
+        topic.question_count = Question.objects.filter(topic=topic).count()
+        for keyword in topic.keywords.all():
+            keyword.question_count = Question.objects.filter(keywords=keyword).count()
+
     return render(request, 'mcq/home.html', {
         'topics': topics,
-        'selected_keywords': selected_keywords
+        'selected_keywords': selected_keywords,
+        'total_questions': total_questions,
     })
 
 
