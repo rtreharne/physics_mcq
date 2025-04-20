@@ -1,41 +1,25 @@
-# A-Level Physics MCQ Prompt (CSV Format)
+You are helping me build PhysicsMCQ.org — a web app for A-level Physics revision. I want to generate large batches of high-quality, unique multiple-choice questions (MCQs) covering all UK exam board specifications (AQA, OCR A/B, Edexcel, Eduqas, WJEC, CCEA).
 
-Use this prompt to generate original multiple choice questions for A-Level Physics.
+Each question should be:
 
----
+- Categorised by a **main topic** and **sub-topic** from my unified topic list (78 sub-topics total).
+- Tagged with relevant **keywords** (terms, formulas, concepts).
+- Marked with applicable **exam_boards** (e.g., AQA;OCR;Edexcel).
+- Contain **no diagrams** — everything must be self-contained, text-only.
+- Include 4 answer options (A–D), with only one correct answer.
+- Include a **clear explanation** for the correct answer.
+- Assigned a **difficulty level**: easy, medium, hard, or hardcore.
+- Uniquely worded — no copying past paper content, even if paraphrased.
+- A mix of **numerical and conceptual** questions.
 
-## ✅ Prompt
+Please output the results in this format (CSV-style columns):
 
-Generate multiple choice questions for **A-level Physics** suitable for the **Edexcel, OCR, AQA, and Eduqas** specifications.
+`topic, subtopic, keywords, exam_boards, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty`
 
-Output should be a **CSV** with the following headers:
+Start by generating **30 questions** for the topic:
 
-```
-topic, keywords, exam_boards, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty
-```
+**Mechanics → 2.2 Kinematics**.
 
-### ✅ Requirements:
+After that, I’ll ask you to generate more by sub-topic.
 
-- **Correct answers only** — all questions must be accurate and clearly explained.
-- No duplication — questions should be unique.
-- Must include a **mix of conceptual and numerical** questions.
-- Each question must be clearly aligned to the **topic** and tagged with **keywords**.
-- Include **exam_boards** (e.g., `AQA;OCR;Edexcel`) to indicate applicability.
-- Set **difficulty** as one of: `easy`, `medium`, `hard`, `hardcore`.
-
-### 📌 Example Topics:
-
-- Gravitational Fields
-- Electricity
-- Waves
-- Quantum Physics
-- Materials (Stress, Strain, Young Modulus)
-- Work, Energy & Power
-- Capacitance
-- Thermal Physics
-- Circular Motion
-- Fields & Forces
-
----
-
-You can reuse this prompt with new topics by changing the `topic` and regenerating another 10–20 questions per batch.
+Let’s build something brilliant.

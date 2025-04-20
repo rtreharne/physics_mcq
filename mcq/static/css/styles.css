@@ -336,5 +336,95 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
   margin-top: 1rem;
 }
 
+.cookie-banner {
+  position: fixed;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 1050;
+  pointer-events: none; /* So it doesn't block anything accidentally */
+}
 
+.cookie-content {
+  pointer-events: auto;
+  max-width: 600px;
+  background-color: #212529;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  margin: 0 1rem;
+}
 
+.cookie-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: none; /* fallback */
+}
+
+.cookie-banner.show {
+  display: block;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.cookie-content {
+  background-color: #212529;
+  color: #fff;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  max-width: 340px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.cookie-content p {
+  margin-bottom: 0.75rem;
+  text-align: left;
+}
+
+.cookie-content a {
+  color: #ffc107;
+  text-decoration: underline;
+}
+
+.cookie-content .btn {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.topic-row:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.collapse {
+  transition: all 0.3s ease-in-out;
+}
+
+.topic-row:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}

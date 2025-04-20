@@ -117,7 +117,43 @@
         {% endblock %}
     </main>
 
+    <div id="cookie-banner" class="cookie-banner d-none">
+      <div class="cookie-content">
+        <p>
+          🍪 We use cookies to save your quiz progress and make the site work properly.
+          By continuing, you agree to our use of cookies. 
+          <a href="{% url 'privacy_policy' %}">Learn more</a>.
+        </p>
+        <button id="cookie-accept-btn" class="btn btn-sm btn-light">Got it!</button>
+      </div>
+    </div>
+    
+
+    
+
     <!-- Bootstrap JS + Popper (optional) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const banner = document.getElementById("cookie-banner");
+        const acceptBtn = document.getElementById("cookie-accept-btn");
+    
+        const isDev = window.location.hostname === "localhost";
+    
+        if (!localStorage.getItem("cookieAccepted") || isDev) {
+          banner.classList.remove("d-none");
+          setTimeout(() => banner.classList.add("show"), 100); // smooth fade-in
+        }
+    
+        acceptBtn?.addEventListener("click", () => {
+          localStorage.setItem("cookieAccepted", "true");
+          banner.classList.remove("show");
+          setTimeout(() => banner.classList.add("d-none"), 300);
+        });
+      });
+    </script>
+    
+    
 </body>
 </html>

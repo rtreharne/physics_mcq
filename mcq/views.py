@@ -26,21 +26,20 @@ from django.db.models import Sum, Avg, Count, F
 
 
 def download_pdf(request):
-    keyword_ids = request.GET.get('keywords', '')
-    keyword_ids = [int(k) for k in keyword_ids.split(',') if k.isdigit()]
+    subtopic_ids = request.GET.get('subtopics_list', '')
+    subtopic_ids = [int(s) for s in subtopic_ids.split(',') if s.isdigit()]
 
-    num_questions = int(request.GET.get('num_questions', 10))  # get from query string
+    num_questions = int(request.GET.get('num_questions', 10))
 
-    # Filter questions by selected keywords
-    questions = Question.objects.filter(keywords__id__in=keyword_ids).distinct()
+    # Get questions for selected subtopics
+    questions = Question.objects.filter(subtopic__id__in=subtopic_ids).distinct()
 
-    # Convert to list, shuffle, and trim to desired count
     questions = list(questions)
     random.shuffle(questions)
     questions = questions[:num_questions]
 
-    # Optional: sort by topic if you still want that
-    questions.sort(key=lambda q: q.topic.name)
+    # Optional: sort by topic name then subtopic name
+    questions.sort(key=lambda q: (q.topic.name, q.subtopic.name if q.subtopic else ''))
 
     html_string = render_to_string('mcq/pdf_template.html', {
         'questions': questions,
@@ -55,43 +54,45 @@ def download_pdf(request):
 
 
 def home(request):
-    topics = Topic.objects.prefetch_related('keywords').order_by('name')
+    topics = Topic.objects.prefetch_related('subtopics').order_by('name')
     total_questions = Question.objects.count()
 
-    selected_keywords = request.GET.get('keywords', '')
-    selected_keywords = list(map(int, selected_keywords.split(','))) if selected_keywords else []
+    # Capture selected subtopics from query string
+    selected_subtopics = request.GET.get('subtopics', '')
+    selected_subtopics = list(map(int, selected_subtopics.split(','))) if selected_subtopics else []
 
     for topic in topics:
         topic.question_count = Question.objects.filter(topic=topic).count()
-        for keyword in topic.keywords.all():
-            keyword.question_count = Question.objects.filter(keywords=keyword).count()
+
+        for subtopic in topic.subtopics.all():
+            subtopic.question_count = Question.objects.filter(subtopic=subtopic).count()
 
     return render(request, 'mcq/home.html', {
         'topics': topics,
-        'selected_keywords': selected_keywords,
+        'selected_subtopics': selected_subtopics,
         'total_questions': total_questions,
     })
 
 
-def filtered_quiz(request):
 
+def filtered_quiz(request):
     chain_length = 1  # default
     if request.user.is_authenticated:
         chain_length = min(request.user.profile.chain_length, 7)
 
-    keyword_ids = request.GET.get('keywords', '')
-    keyword_ids = [int(k) for k in keyword_ids.split(',') if k.isdigit()]
-    
+    # Parse subtopic IDs from subtopics_list param
+    subtopic_ids = request.GET.get('subtopics_list', '')
+    subtopic_ids = [int(s) for s in subtopic_ids.split(',') if s.isdigit()]
+
     num_questions = int(request.GET.get('num_questions', 10))
     time_per_question = float(request.GET.get('time_per_question', 1.0))
 
-    # Start with keyword-filtered queryset
-    queryset = Question.objects.filter(keywords__id__in=keyword_ids).distinct()
+    # Filter by subtopics and preload related topic + subtopic to avoid DB hits
+    queryset = Question.objects.select_related('topic', 'subtopic').filter(
+        subtopic__id__in=subtopic_ids
+    ).distinct()
 
-    # Convert to a list of unique questions
     questions = list(queryset)
-
-    # Shuffle and trim
     random.shuffle(questions)
     questions = questions[:num_questions]
 
@@ -100,6 +101,8 @@ def filtered_quiz(request):
         'time_per_question': time_per_question,
         'chain_length': chain_length,
     })
+
+
 
 
 
@@ -203,30 +206,59 @@ def leaderboard_view(request):
     })
 
 def get_topic_accuracy(user):
-    responses = QuizResponse.objects.filter(attempt__user=user).select_related('question__topic')
+    responses = QuizResponse.objects.filter(
+        attempt__user=user
+    ).select_related('question__topic', 'question__subtopic')
 
     topic_stats = {}
 
     for r in responses:
         topic = r.question.topic
+        subtopic = r.question.subtopic
+
         if topic not in topic_stats:
-            topic_stats[topic] = {'correct': 0, 'total': 0}
+            topic_stats[topic] = {
+                'correct': 0,
+                'total': 0,
+                'subtopics': {}
+            }
+
         topic_stats[topic]['total'] += 1
         if r.correct:
             topic_stats[topic]['correct'] += 1
 
-    accuracy_list = [
-        {
+        if subtopic:
+            if subtopic not in topic_stats[topic]['subtopics']:
+                topic_stats[topic]['subtopics'][subtopic] = {'correct': 0, 'total': 0}
+            topic_stats[topic]['subtopics'][subtopic]['total'] += 1
+            if r.correct:
+                topic_stats[topic]['subtopics'][subtopic]['correct'] += 1
+
+    accuracy_list = []
+
+    for topic, data in topic_stats.items():
+        subtopics_data = []
+        for subtopic, sub_data in data['subtopics'].items():
+            accuracy = round((sub_data['correct'] / sub_data['total']) * 100, 1) if sub_data['total'] > 0 else 0
+            subtopics_data.append({
+                'subtopic': subtopic,
+                'correct': sub_data['correct'],
+                'total': sub_data['total'],
+                'accuracy': accuracy
+            })
+
+        topic_accuracy = round((data['correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0
+
+        accuracy_list.append({
             'topic': topic,
             'correct': data['correct'],
             'total': data['total'],
-            'accuracy': round((data['correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0
-        }
-        for topic, data in topic_stats.items()
-    ]
+            'accuracy': topic_accuracy,
+            'subtopics': sorted(subtopics_data, key=lambda x: x['subtopic'].name.lower())
+        })
 
-    # ✅ Sort alphabetically by topic name
     return sorted(accuracy_list, key=lambda x: x['topic'].name.lower())
+
 
 
 

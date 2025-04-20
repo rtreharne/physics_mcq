@@ -4,13 +4,23 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 import csv, io
 
-from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse
+from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse, Subtopic
 from .forms import TopicCSVUploadForm
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'anonymous_name')
     search_fields = ('user__email', 'anonymous_name')
+
+@admin.register(Subtopic)
+class SubtopicAdmin(admin.ModelAdmin):
+    list_display = ('name', 'topic')
+    list_filter = ('topic',)
+    search_fields = ('name',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('topic')
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
@@ -57,7 +67,7 @@ admin.site.register(ExamBoard)
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('question_text', 'topic', 'difficulty')
+    list_display = ('question_text', 'topic', 'subtopic', 'difficulty')
     
     def get_urls(self):
         urls = super().get_urls()
@@ -78,10 +88,23 @@ class QuestionAdmin(admin.ModelAdmin):
                     reader = csv.DictReader(io_string)
 
                     for row in reader:
-                        topic, _ = Topic.objects.get_or_create(name=row['topic'].strip())
+                        topic_name = row['topic'].strip()
+                        topic, _ = Topic.objects.get_or_create(name=topic_name)
 
+                        # Get or create subtopic (if present)
+                        subtopic_name = row.get('subtopic', '').strip()
+                        subtopic = None
+                        if subtopic_name:
+                            from .models import Subtopic  # Inline import just in case
+                            subtopic, _ = Subtopic.objects.get_or_create(
+                                name=subtopic_name,
+                                topic=topic
+                            )
+
+                        # Create the question
                         q = Question.objects.create(
                             topic=topic,
+                            subtopic=subtopic,
                             question_text=row['question_text'].strip(),
                             option_a=row['option_a'].strip(),
                             option_b=row['option_b'].strip(),
@@ -108,7 +131,11 @@ class QuestionAdmin(admin.ModelAdmin):
 
                         total_imported += 1
 
-                self.message_user(request, f"Successfully imported {total_imported} questions.", level=messages.SUCCESS)
+                self.message_user(
+                    request,
+                    f"Successfully imported {total_imported} questions.",
+                    level=messages.SUCCESS
+                )
                 return redirect("..")
 
             except Exception as e:
@@ -118,6 +145,7 @@ class QuestionAdmin(admin.ModelAdmin):
         return render(request, "admin/question_csv_upload.html", {
             'title': 'Upload Questions via CSV'
         })
+
     
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):

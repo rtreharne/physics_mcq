@@ -32,6 +32,12 @@
           {{ question.difficulty|title }}
         </span>
       </p>
+
+      <p class="text-muted mb-1 small">
+        <strong>{{ question.topic.name }}</strong>
+        {% if question.subtopic %} – {{ question.subtopic.name }}{% endif %}
+      </p>
+      
       <h4>{{ question.question_text|safe }}</h4>
 
       
@@ -50,7 +56,7 @@
                         {% if letter == question.correct_option %}data-correct{% endif %}>
                  
                     <label class="form-check-label" for="q{{ question_index }}-{{ letter }}">
-                        {{ letter }}. {{ choice }}
+                        {{ letter }}. {{ choice|safe }}
                     </label>
                     </div>
                 {% endwith %}

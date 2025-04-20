@@ -3,24 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: sans-serif; }
-    h2 { margin-top: 2rem; }
-    .question { margin-bottom: 1.5rem; }
-    .page-break { page-break-before: always; }
+    body {
+      font-family: sans-serif;
+      font-size: 12pt;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      margin-top: 2rem;
+    }
+    .question {
+      margin-bottom: 1.5rem;
+    }
+    .meta {
+      font-size: 0.9em;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    .coffee-page {
+      text-align: center;
+      padding: 3rem;
+    }
+    .coffee-page img {
+      width: 200px;
+      margin: 1.5rem auto;
+    }
+    .about {
+      margin-top: 2rem;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 0.95em;
+      color: #333;
+    }
   </style>
 </head>
 <body>
+
   <h1>Quiz Questions</h1>
 
   {% for q in questions %}
     <div class="question">
-      <strong>Q{{ forloop.counter }}:</strong> {{ q.question_text }}<br>
-      A. {{ q.option_a }}<br>
-      B. {{ q.option_b }}<br>
-      C. {{ q.option_c }}<br>
-      D. {{ q.option_d }}
+      <div class="meta">
+        {{ q.topic.name }}{% if q.subtopic %} – {{ q.subtopic.name }}{% endif %}
+      </div>
+      <strong>Q{{ forloop.counter }}:</strong> {{ q.question_text|safe }}<br>
+      A. {{ q.option_a|safe }}<br>
+      B. {{ q.option_b|safe }}<br>
+      C. {{ q.option_c|safe }}<br>
+      D. {{ q.option_d|safe }}
     </div>
   {% endfor %}
+
+  <div class="page-break"></div>
+
+  <div class="coffee-page">
+    <h1>🙏 Enjoying this resource?</h1>
+    <p>
+      Creating these quizzes takes hours of love, care, and caffeine. If this has helped you or your students,
+      please consider supporting the project.
+    </p>
+    <p>
+      <strong>Buy me a coffee at:</strong><br>
+      <a href="https://buymeacoffee.com/robtreharne">buymeacoffee.com/robtreharne</a>
+    </p>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://buymeacoffee.com/robtreharne&size=200x200" alt="Buy Me a Coffee QR code">
+    <p style="margin-top: 1rem;">Every coffee helps fuel more free content. Thank you! ☕</p>
+
+    <div class="about">
+      <h2>About the Creator</h2>
+      <p>
+        Hi, I'm <strong>Dr. Robert Treharne</strong>. I’ve been tutoring A-Level Physics for over 10 years — and I took A-Level Physics myself back in 2003. I went on to earn a Master’s in Physics and a PhD in Condensed Matter Physics, and I now work as a Senior Lecturer in the School of Biosciences at the University of Liverpool.
+      </p>
+      <p>
+        I'm also a dad, husband, and passionate gardener 🌱. This project is a labour of love — created to help students succeed without barriers. Your support helps me keep it going!
+      </p>
+    </div>
+  </div>
 
   <div class="page-break"></div>
 
@@ -30,9 +92,10 @@
     <div class="question">
       <strong>Q{{ forloop.counter }}:</strong> Correct answer: {{ q.correct_option }}<br>
       {% if q.explanation %}
-        <em>{{ q.explanation }}</em>
+        <em>{{ q.explanation|safe }}</em>
       {% endif %}
     </div>
   {% endfor %}
+
 </body>
 </html>

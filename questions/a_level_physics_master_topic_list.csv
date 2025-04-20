@@ -1,0 +1,79 @@
+Main Topic,Sub-topic
+1. Measurements and Uncertainties,1.1 SI Units and Prefixes
+1. Measurements and Uncertainties,1.2 Measurement Tools and Techniques
+1. Measurements and Uncertainties,1.3 Uncertainty and Error Analysis
+1. Measurements and Uncertainties,1.4 Graphing and Data Interpretation
+2. Mechanics,2.1 Scalars and Vectors
+2. Mechanics,"2.2 Kinematics (suvat equations, graphs)"
+2. Mechanics,2.3 Newton’s Laws of Motion
+2. Mechanics,2.4 Momentum and Impulse
+2. Mechanics,"2.5 Work, Energy and Power"
+2. Mechanics,2.6 Conservation of Energy
+2. Mechanics,2.7 Circular Motion
+2. Mechanics,2.8 Oscillations and SHM
+2. Mechanics,2.9 Damping and Resonance
+3. Materials,3.1 Density and Pressure
+3. Materials,3.2 Hooke’s Law and Elasticity
+3. Materials,"3.3 Stress, Strain, Young’s Modulus"
+3. Materials,3.4 Springs in Series and Parallel
+3. Materials,3.5 Area under Force-Extension Graphs
+4. Waves and Optics,"4.1 Wave Properties (v = fλ, types of waves)"
+4. Waves and Optics,4.2 Superposition and Interference
+4. Waves and Optics,4.3 Diffraction and Young’s Double Slit
+4. Waves and Optics,4.4 Standing Waves
+4. Waves and Optics,4.5 Refraction and Snell’s Law
+4. Waves and Optics,4.6 Total Internal Reflection and Optical Fibres
+4. Waves and Optics,4.7 Polarisation
+5. Electricity,"5.1 Charge, Current, and Time"
+5. Electricity,5.2 Potential Difference and EMF
+5. Electricity,5.3 Resistance and Ohm’s Law
+5. Electricity,5.4 IV Characteristics (ohmic/non-ohmic)
+5. Electricity,5.5 Power and Energy Transfer
+5. Electricity,5.6 Series and Parallel Circuits
+5. Electricity,5.7 Kirchhoff’s Laws
+5. Electricity,5.8 Internal Resistance
+5. Electricity,5.9 Capacitance and RC Circuits
+6. Thermal Physics,6.1 Temperature and Thermometers
+6. Thermal Physics,6.2 Specific Heat Capacity
+6. Thermal Physics,6.3 Latent Heat
+6. Thermal Physics,6.4 Kinetic Theory of Gases
+6. Thermal Physics,6.5 Ideal Gas Equation
+6. Thermal Physics,6.6 Thermodynamic Processes
+7. Fields,7.1 Gravitational Fields and Orbits
+7. Fields,7.2 Electric Fields and Coulomb’s Law
+7. Fields,7.3 Electric Potential
+7. Fields,7.4 Capacitors in Fields
+7. Fields,7.5 Magnetic Fields and Forces
+7. Fields,7.6 Electromagnetic Induction
+7. Fields,7.7 Alternating Currents
+7. Fields,7.8 Transformers and Power Transmission
+8. Nuclear and Particle Physics,8.1 Atomic Structure and Isotopes
+8. Nuclear and Particle Physics,8.2 Radioactivity and Decay Equations
+8. Nuclear and Particle Physics,8.3 Nuclear Equations and Half-life
+8. Nuclear and Particle Physics,8.4 Binding Energy and Fission/Fusion
+8. Nuclear and Particle Physics,"8.5 Fundamental Particles (quarks, leptons)"
+8. Nuclear and Particle Physics,8.6 Particle Accelerators and Detectors
+9. Quantum Physics,9.1 Photoelectric Effect
+9. Quantum Physics,9.2 Einstein’s Photoelectric Equation
+9. Quantum Physics,9.3 Energy Levels and Spectral Lines
+9. Quantum Physics,9.4 Wave-Particle Duality and de Broglie
+10. Astrophysics and Cosmology,10.1 Stellar Classification and HR Diagrams
+10. Astrophysics and Cosmology,10.2 Stellar Evolution
+10. Astrophysics and Cosmology,10.3 Redshift and Hubble’s Law
+10. Astrophysics and Cosmology,10.4 The Big Bang and Cosmic Microwave Background
+10. Astrophysics and Cosmology,10.5 Dark Matter and Dark Energy
+11. Medical Physics,11.1 X-rays and Attenuation
+11. Medical Physics,11.2 CT Scans and Gamma Cameras
+11. Medical Physics,11.3 Ultrasound and Piezoelectricity
+11. Medical Physics,11.4 PET and MRI Scans
+11. Medical Physics,11.5 Radiation Doses and Safety
+12. Engineering Physics,12.1 Rotational Dynamics and Moment of Inertia
+12. Engineering Physics,12.2 Stress-Strain in Real Materials
+12. Engineering Physics,12.3 Thermodynamics in Engines
+12. Engineering Physics,12.4 Power Transmission and Efficiency
+13. Practical Skills,13.1 Required Practicals (CPAC)
+13. Practical Skills,13.2 Planning and Hypothesis
+13. Practical Skills,13.3 Using Measuring Instruments
+13. Practical Skills,13.4 Analysing and Presenting Data
+13. Practical Skills,13.5 Evaluating Results and Improvements
+13. Practical Skills,13.6 Uncertainties and Error Bars

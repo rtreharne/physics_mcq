@@ -20,12 +20,13 @@
 
 <form method="get" action="{% url 'quiz' %}" id="keyword-form">
   <!-- Hidden input for final comma-separated list -->
-  <input type="hidden" name="keywords" id="keywords-consolidated">
+  <input type="hidden" name="subtopics" id="subtopics-consolidated">
+
+
 
   
   <div class="row bottom-buffer bg-white p-4 rounded shadow-sm mb-5">
     {% for topic in topics %}
-
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100 border-0 shadow-sm topic-card">
           <div class="card-body">
@@ -34,28 +35,27 @@
               <span>{{ topic.name }}</span>
               <small class="text-muted mt-1" style="font-size: 0.85rem;">{{ topic.question_count }} questions available</small>
             </h5>
+  
+            <div id="subtopics-{{ topic.id }}" class="keyword-wrap">
+              {% for subtopic in topic.subtopics.all %}
+                <div class="form-check form-check-inline keyword-check">
+                  
+                  <input class="form-check-input subtopic-checkbox"
+                    type="checkbox"
+                    value="{{ subtopic.id }}"
+                    id="subtopic-{{ subtopic.id }}">
+           
 
+                  <label class="form-check-label" for="subtopic-{{ subtopic.id }}">
+                    {{ subtopic.name }} <span class="badge bg-secondary">{{ subtopic.question_count }}</span>
 
-            <div id="keywords-{{ topic.id }}" class="keyword-wrap">
-              {% for keyword in topic.keywords.all|dictsort:"name" %}
-                {% if keyword.visible %}
-                  <div class="form-check form-check-inline keyword-check">
-                    <input class="form-check-input keyword-checkbox"
-                           type="checkbox"
-                           name="keywords_list"
-                           value="{{ keyword.id }}"
-                           id="keyword-{{ keyword.id }}"
-                           {% if keyword.id in selected_keywords %}checked{% endif %}>
-                    <label class="form-check-label" for="keyword-{{ keyword.id }}">
-                      {{ keyword.name }} <span class="badge bg-secondary">{{ keyword.question_count }}</span>
-                    </label>
-                  </div>
-                {% endif %}
+                  </label>
+                </div>
               {% empty %}
-                <p class="text-muted">No keywords</p>
+                <p class="text-muted">No subtopics</p>
               {% endfor %}
             </div>
-            
+  
           </div>
         </div>
       </div>
@@ -108,31 +108,32 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const keywordCheckboxes = document.querySelectorAll('input[name="keywords_list"]');
+    const subtopicCheckboxes = document.querySelectorAll('.subtopic-checkbox');
+
     const startBtn = document.getElementById('start-quiz-btn');
     const pdfBtn = document.getElementById('download-pdf-btn');
     const form = document.getElementById("keyword-form");
 
-    // Enable/disable buttons based on keyword selection
+    // Enable/disable buttons based on subtopic selection
     function updateButtonStates() {
-      const anyChecked = Array.from(keywordCheckboxes).some(cb => cb.checked);
+      const anyChecked = Array.from(subtopicCheckboxes).some(cb => cb.checked);
       startBtn.disabled = !anyChecked;
       pdfBtn.disabled = !anyChecked;
     }
 
-    keywordCheckboxes.forEach(cb => {
+    subtopicCheckboxes.forEach(cb => {
       cb.addEventListener("change", updateButtonStates);
     });
 
     updateButtonStates(); // Initial check on load
 
-    // Topic header click toggles all keywords
+    // Topic header click toggles all subtopics
     const topicTitles = document.querySelectorAll('.topic-title');
     topicTitles.forEach(title => {
       title.addEventListener('click', () => {
         const topicId = title.dataset.topic;
-        const keywordContainer = document.getElementById('keywords-' + topicId);
-        const checkboxes = keywordContainer.querySelectorAll('input[type="checkbox"]');
+        const subtopicContainer = document.getElementById('subtopics-' + topicId);
+        const checkboxes = subtopicContainer.querySelectorAll('input[type="checkbox"]');
 
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
@@ -141,23 +142,35 @@
       });
     });
 
-    // On form submit, consolidate selected keywords into hidden input
+    // On form submit, consolidate selected subtopics into hidden input
     form.addEventListener("submit", function () {
-      const selected = Array.from(document.querySelectorAll('.keyword-checkbox:checked'))
+      const selected = Array.from(document.querySelectorAll('.subtopic-checkbox:checked'))
                             .map(cb => cb.value);
-      document.getElementById("keywords-consolidated").value = selected.join(",");
+        document.getElementById("subtopics-consolidated").name = "subtopics_list";
+        document.getElementById("subtopics-consolidated").value = selected.join(",");
+
     });
 
     // Handle PDF download
+    // Handle PDF download
     pdfBtn.addEventListener("click", function () {
-      const selected = Array.from(document.querySelectorAll('.keyword-checkbox:checked'))
+      const selected = Array.from(document.querySelectorAll('.subtopic-checkbox:checked'))
                             .map(cb => cb.value);
-      if (selected.length === 0) return;  // Just fail silently
-      const query = new URLSearchParams({ keywords: selected.join(',') });
+      if (selected.length === 0) return;
+
+      const numQuestions = document.getElementById("numQuestions").value;
+
+      const query = new URLSearchParams({
+        subtopics_list: selected.join(','),  // ✅ FIXED param name
+        num_questions: numQuestions
+      });
+
       window.open(`/download-pdf/?${query.toString()}`, '_blank');
     });
+
   });
 </script>
+
 
 
 

@@ -139,6 +139,9 @@ document.addEventListener("DOMContentLoaded", function () {
           if (isCorrect) correctCount++;
       
           // Question text
+          const topicInfo = questionEl.querySelector('.text-muted.small');
+          const topicSubtopic = topicInfo ? topicInfo.textContent.trim() : '';
+
           const questionText = questionEl.querySelector('h4').textContent;
           const explanationEl = questionEl.querySelector('.question-explanation');
           const explanation = explanationEl ? explanationEl.dataset.explanation : null;
@@ -155,6 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     difficulty === 'hardcore' ? 'bg-danger' : 'bg-secondary'
                 }">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
                 </p>
+                <p class="mb-1 text-muted"><em>${topicSubtopic}</em></p>
+
                 <h5 class="card-title">${questionText}</h5>
                 <p class="mb-1">
                   <strong>Your answer:</strong> ${userText} 

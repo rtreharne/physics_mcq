@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -10,6 +11,8 @@ urlpatterns = [
     path('my-quizzes/<int:attempt_id>/', views.view_attempt, name='view_attempt'),
     path('download-pdf/', views.download_pdf, name='download_pdf'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
+    path("privacy/", TemplateView.as_view(template_name="mcq/privacy.html"), name="privacy_policy"),
+
 
 
     
