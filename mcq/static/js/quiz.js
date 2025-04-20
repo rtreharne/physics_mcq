@@ -118,60 +118,69 @@ document.addEventListener("DOMContentLoaded", function () {
           
       
         const reviewHTML = Array.from(questions).map((questionEl, index) => {
-
-          // Get difficulty from dataset
           const difficulty = questionEl.dataset.difficulty || 'unknown';
-
-          // Get correct input and label
+          const questionId = questionEl.dataset.questionId;
+        
           const correctInputEl = questionEl.querySelector('.form-check-input[data-correct]');
           const correctValue = correctInputEl ? correctInputEl.value.trim().toUpperCase() : null;
           const correctLabelEl = correctInputEl ? questionEl.querySelector(`label[for="${correctInputEl.id}"]`) : null;
           const correctText = correctLabelEl ? correctLabelEl.textContent.trim() : 'N/A';
-      
-          // Get user answer and label
+        
           const userValueRaw = userAnswers[index] || '';
           const userValue = userValueRaw.trim().toUpperCase();
           const userInputEl = questionEl.querySelector(`.form-check-input[value="${userValue}"]`);
           const userLabelEl = userInputEl ? questionEl.querySelector(`label[for="${userInputEl.id}"]`) : null;
           const userText = userLabelEl ? userLabelEl.textContent.trim() : 'N/A';
-      
+        
           const isCorrect = userValue === correctValue;
           if (isCorrect) correctCount++;
-      
-          // Question text
-          const topicInfo = questionEl.querySelector('.text-muted.small');
-          const topicSubtopic = topicInfo ? topicInfo.textContent.trim() : '';
-
+        
           const questionText = questionEl.querySelector('h4').textContent;
           const explanationEl = questionEl.querySelector('.question-explanation');
           const explanation = explanationEl ? explanationEl.dataset.explanation : null;
-      
+        
+          const topic = questionEl.querySelector('.badge + small')?.textContent || '';
+          const alreadyFlagged = questionEl.getAttribute("data-flagged") === "true";
+
+
+        
+          let flagMarkup = "";
+          if (document.body.dataset.superuser === "true") {
+            if (alreadyFlagged) {
+              flagMarkup = `<span class="badge bg-warning text-dark mt-2 d-inline-block">🚩 Already flagged</span>`;
+            } else {
+              flagMarkup = `<button class="btn btn-sm btn-outline-danger flag-btn mt-2" data-question-id="${questionId}">
+                              🚩 Flag for review
+                            </button>`;
+            }
+          }
+        
           return `
             <div class="card mb-4 shadow-sm ${isCorrect ? 'correct' : 'incorrect'}">
-            
               <div class="card-body">
-              <p class="mb-1">
-                <span class="badge ${
+                <p class="mb-1">
+                  <span class="badge ${
                     difficulty === 'easy' ? 'bg-success' :
                     difficulty === 'medium' ? 'bg-primary' :
                     difficulty === 'hard' ? 'bg-warning text-dark' :
                     difficulty === 'hardcore' ? 'bg-danger' : 'bg-secondary'
-                }">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
+                  }">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
+                  <small class="text-muted ms-2">${topic}</small>
                 </p>
-                <p class="mb-1 text-muted"><em>${topicSubtopic}</em></p>
-
                 <h5 class="card-title">${questionText}</h5>
                 <p class="mb-1">
-                  <strong>Your answer:</strong> ${userText} 
+                  <strong>Your answer:</strong> ${userText}
                   ${isCorrect ? '✅' : '<span style="color:red;">✖️</span>'}
                 </p>
                 <p class="mb-1"><strong>Correct answer:</strong> ${correctText}</p>
                 ${explanation ? `<div class="alert alert-info mt-3"><strong>Explanation:</strong> ${explanation}</div>` : ''}
+                ${flagMarkup}
               </div>
             </div>
           `;
         }).join('');
-      
+
+              
         const percentage = Math.round((correctCount / totalQuestions) * 100);
         const timeTakenSeconds = Math.floor((quizEndTime - quizStartTime) / 1000);
         const mins = Math.floor(timeTakenSeconds / 60);
@@ -194,11 +203,44 @@ document.addEventListener("DOMContentLoaded", function () {
         const container = document.createElement('div');
         container.className = 'results';
         container.innerHTML = resultsHeader + reviewHTML;
-      
-        document.querySelector('main').appendChild(container);
+
+        // Replace all content inside <main> with the results
+        const main = document.querySelector('main');
+        main.innerHTML = '';
+        main.appendChild(container);
+
+
+        if (document.body.dataset.superuser === "true") {
+          document.querySelectorAll('.flag-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const questionId = btn.dataset.questionId;
+              const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+              fetch("/flag-question/", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ question_id: questionId })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  const badge = document.createElement("span");
+                  badge.className = "badge bg-warning text-dark mt-2 d-inline-block";
+                  badge.textContent = "🚩 Already flagged";
+                  btn.replaceWith(badge);
+                } else {
+                  alert("Couldn't flag question.");
+                }
+              });
+            });
+          });
+        }
 
         // Scroll to the top of the main content
-        container.scrollIntoView({ behavior: 'auto', block: 'start' });
+        // container.scrollIntoView({ behavior: 'auto', block: 'start' });
 
         const payload = generateResultsPayload();
         sendResultsToBackend(payload);

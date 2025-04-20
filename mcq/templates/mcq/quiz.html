@@ -1,7 +1,6 @@
 {% extends 'mcq/base.html' %}
 {% load custom_tags %}
 {% load static %}
-
 {% block title %}Quiz - Physics MCQs{% endblock %}
 
 {% block content %}
@@ -9,19 +8,21 @@
 {% csrf_token %}
 <meta name="csrf-token" content="{{ csrf_token }}">
 
-
-
-
 <!-- Progress Display -->
 <div class="mb-3">
   <strong id="quiz-progress">Question 1 of {{ questions|length }}</strong>
 </div>
 
-
 <div id="quiz-container">
   {% for question in questions %}
-    <div class="quiz-question" data-question-index="{{ forloop.counter0 }}" data-difficulty="{{ question.difficulty }}" data-question-id="{{ question.id }}" style="{% if not forloop.first %}display:none;{% endif %}">
-        <p class="text-muted mb-2">
+    <div class="quiz-question" 
+        data-question-index="{{ forloop.counter0 }}" 
+        data-difficulty="{{ question.difficulty }}" 
+        data-question-id="{{ question.id }}" 
+        data-flagged="{{ question.flagged|yesno:'true,false' }}"
+        style="{% if not forloop.first %}display:none;{% endif %}">
+
+      <p class="text-muted mb-2">
         <span class="badge 
           {% if question.difficulty == 'easy' %}bg-success
           {% elif question.difficulty == 'medium' %}bg-primary
@@ -31,65 +32,71 @@
           {% endif %}">
           {{ question.difficulty|title }}
         </span>
+
+        <small class="ms-2 text-muted">
+          {{ question.topic.name }}{% if question.subtopic %} → {{ question.subtopic.name }}{% endif %}
+        </small>
       </p>
 
-      <p class="text-muted mb-1 small">
-        <strong>{{ question.topic.name }}</strong>
-        {% if question.subtopic %} – {{ question.subtopic.name }}{% endif %}
-      </p>
-      
       <h4>{{ question.question_text|safe }}</h4>
-
-      
 
       <div class="quiz-answers mt-3 answer-block-offset">
         {% with question_index=forloop.counter0 %}
-            {% for letter in "ABCD" %}
-                {% with attr_name="option_"|add:letter|lower %}
-                {% with choice=question|get_attr:attr_name %}
-                    <div class="form-check mb-2">
-                        <input class="form-check-input answer-option"
-                        type="radio"
-                        name="question-{{ question_index }}"
-                        value="{{ letter }}"
-                        id="q{{ question_index }}-{{ letter }}"
-                        {% if letter == question.correct_option %}data-correct{% endif %}>
-                 
-                    <label class="form-check-label" for="q{{ question_index }}-{{ letter }}">
-                        {{ letter }}. {{ choice|safe }}
-                    </label>
-                    </div>
-                {% endwith %}
-                {% endwith %}
-            {% endfor %}
+          {% for letter in "ABCD" %}
+            {% with attr_name="option_"|add:letter|lower %}
+              {% with choice=question|get_attr:attr_name %}
+                <div class="form-check mb-2">
+                  <input class="form-check-input answer-option"
+                         type="radio"
+                         name="question-{{ question_index }}"
+                         value="{{ letter }}"
+                         id="q{{ question_index }}-{{ letter }}"
+                         {% if letter == question.correct_option %}data-correct{% endif %}>
+                  <label class="form-check-label" for="q{{ question_index }}-{{ letter }}">
+                    {{ letter }}. {{ choice|safe }}
+                  </label>
+                </div>
+              {% endwith %}
+            {% endwith %}
+          {% endfor %}
         {% endwith %}
 
         {% if question.explanation %}
-            <div class="question-explanation d-none" data-explanation="{{ question.explanation }}"></div>
+          <div class="question-explanation d-none" data-explanation="{{ question.explanation }}"></div>
         {% endif %}
-
-
       </div>
+
+      {% if user.is_superuser %}
+        {% if question.flagged %}
+            <span class="badge bg-warning text-dark mt-2 d-inline-block">🚩 Already flagged</span>
+        {% else %}
+            <button class="btn btn-sm btn-outline-danger flag-btn mt-2"
+                    data-question-id="{{ question.id }}">
+            🚩 Flag for review
+            </button>
+        {% endif %}
+    {% endif %}
+
     </div>
   {% endfor %}
 </div>
 
+<!-- Fixed bottom bar -->
 <div class="bottom-bar d-flex justify-content-between align-items-center">
-    <div id="question-timer" class="text-muted fw-semibold">
-      Time left: <span id="timer-display">--:--</span>
-    </div>
-    <button id="next-btn" class="btn btn-primary btn-lg" disabled>Next</button>
+  <div id="question-timer" class="text-muted fw-semibold">
+    Time left: <span id="timer-display">--:--</span>
+  </div>
+  <button id="next-btn" class="btn btn-primary btn-lg" disabled>Next</button>
 </div>
 
-
-<!-- Buffer to prevent content being hidden -->
+<!-- Buffer -->
 <div class="bottom-buffer"></div>
 
+<!-- Hidden meta info -->
 <div id="quiz-meta"
      data-time-per-question="{{ time_per_question|default:1|floatformat:2 }}"
      data-user-authenticated="{{ user.is_authenticated }}"
      data-chain-length="{{ chain_length }}">
-     
 </div>
 
 <!-- Buy Me a Coffee Modal -->
@@ -101,13 +108,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        I created PhysicsMCQs.org to keep high-quality, exam-style revision free for everyone — forever. If the site’s helped you or your students, please consider buying me a ☕️ to support its growth and running costs. Every contribution makes a real difference. Thanks!
-      
-        <br><br>
+        I created PhysicsMCQs.org to keep high-quality, exam-style revision free for everyone — forever.
+        If the site’s helped you or your students, please consider buying me a ☕️ to support its growth and running costs. Every contribution makes a real difference. Thanks!<br><br>
         <em>– <a href="https://www.linkedin.com/in/robtreharne" target="_blank">Dr. Robert Treharne</a></em>
       </div>
-      
-      
       <div class="modal-footer justify-content-center">
         <a href="https://www.buymeacoffee.com/robtreharne" class="btn btn-warning" target="_blank">
           Buy Me a Coffee
@@ -117,6 +121,38 @@
   </div>
 </div>
 
+<!-- Scripts -->
 <script src="{% static 'js/quiz.js' %}"></script>
+
+{% if user.is_superuser %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.flag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const questionId = btn.dataset.questionId;
+        fetch("/flag-question/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify({ question_id: questionId })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            btn.textContent = "✅ Flagged";
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-success");
+            btn.disabled = true;
+          } else {
+            alert("Couldn't flag question.");
+          }
+        });
+      });
+    });
+  });
+</script>
+{% endif %}
 
 {% endblock %}

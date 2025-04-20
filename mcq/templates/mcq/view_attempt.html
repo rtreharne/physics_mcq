@@ -4,6 +4,9 @@
 {% block title %}Attempt Review{% endblock %}
 
 {% block content %}
+{% csrf_token %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
 <h2>Quiz Review</h2>
 <p><strong>Date:</strong> {{ attempt.date_taken }}</p>
 <p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</p>
@@ -12,15 +15,60 @@
 <hr>
 
 {% for r in responses %}
-  <div class="card mb-3 {% if r.correct %}border-success{% else %}border-danger{% endif %}">
-    <div class="card-body">
-      <h5 class="card-title">{{ r.question.question_text }}</h5>
-      <p><strong>Your answer:</strong> {{ r.user_answer }}</p>
-      <p><strong>Correct answer:</strong> {{ r.question.correct_option }}</p>
-      {% if r.question.explanation %}
-        <div class="alert alert-info">{{ r.question.explanation }}</div>
+<div class="card mb-3 {% if r.correct %}border-success{% else %}border-danger{% endif %}">
+  <div class="card-body">
+    <h5 class="card-title">{{ r.question.question_text|safe }}</h5>
+    <p><strong>Your answer:</strong> {{ r.user_answer }}</p>
+    <p><strong>Correct answer:</strong> {{ r.question.correct_option }}</p>
+
+    {% if r.question.explanation %}
+      <div class="alert alert-info">{{ r.question.explanation }}</div>
+    {% endif %}
+
+    {% if user.is_superuser %}
+      {% if r.question.flagged %}
+        <span class="badge bg-warning text-dark mt-2 d-inline-block">🚩 Already flagged</span>
+      {% else %}
+        <button class="btn btn-sm btn-outline-danger flag-btn mt-2"
+                data-question-id="{{ r.question.id }}">
+          🚩 Flag for review
+        </button>
       {% endif %}
-    </div>
+{% endif %}
+
   </div>
+</div>
 {% endfor %}
+
+{% if user.is_superuser %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.flag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const questionId = btn.dataset.questionId;
+        fetch("/flag-question/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('[name="csrfmiddlewaretoken"]').value
+          },
+          body: JSON.stringify({ question_id: questionId })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            btn.textContent = "✅ Flagged";
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-success");
+            btn.disabled = true;
+          } else {
+            alert("Couldn't flag question.");
+          }
+        });
+      });
+    });
+  });
+</script>
+{% endif %}
+
 {% endblock %}

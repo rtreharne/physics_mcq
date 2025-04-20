@@ -72,6 +72,7 @@ class Question(models.Model):
     option_d = models.CharField(max_length=255)
     correct_option = models.CharField(max_length=1, choices=[('A','A'),('B','B'),('C','C'),('D','D')])
     explanation = models.TextField(blank=True)
+    flagged = models.BooleanField(default=False)
 
     def __str__(self):
         return self.question_text[:60]

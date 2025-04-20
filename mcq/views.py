@@ -23,6 +23,21 @@ from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from datetime import datetime
 from django.db.models import Sum, Avg, Count, F
+from django.contrib.admin.views.decorators import staff_member_required
+
+@require_POST
+@staff_member_required
+def flag_question(request):
+
+    try:
+        data = json.loads(request.body)
+        question_id = data.get('question_id')
+        question = Question.objects.get(pk=question_id)
+        question.flagged = True
+        question.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 def download_pdf(request):

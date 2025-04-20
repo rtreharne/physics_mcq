@@ -12,6 +12,8 @@ urlpatterns = [
     path('download-pdf/', views.download_pdf, name='download_pdf'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
     path("privacy/", TemplateView.as_view(template_name="mcq/privacy.html"), name="privacy_policy"),
+    path("flag-question/", views.flag_question, name="flag_question"),
+
 
 
 

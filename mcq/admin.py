@@ -67,7 +67,10 @@ admin.site.register(ExamBoard)
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('question_text', 'topic', 'subtopic', 'difficulty')
+    list_display = ('question_text', 'topic', 'subtopic', 'difficulty', 'flagged')
+    list_filter = ('flagged', 'difficulty')
+    search_fields = ('question_text',)
+    list_editable = ('flagged',)
     
     def get_urls(self):
         urls = super().get_urls()
