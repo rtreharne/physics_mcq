@@ -51,7 +51,7 @@
       
       <p><strong>Correct answer:</strong> 
         {{ r.question.correct_option }}.
-        {% with "option_"|add:r.user_answer|lower as option_attr %}
+        {% with "option_"|add:r.question.correct_option|lower as option_attr %}
           {{ r.question|get_attr:option_attr }}
         {% endwith %}
       </p>

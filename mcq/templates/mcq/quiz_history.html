@@ -25,7 +25,7 @@
 
     <!-- Accuracy Bar -->
     <div class="mt-3">
-      <small class="fw-semibold text-muted">Overall Accuracy: {{ overall_accuracy }}%</small>
+      <small class="fw-semibold text-muted">Overall Accuracy:</small>
       <div class="progress" style="height: 20px;">
         <div class="progress-bar 
           {% if overall_accuracy < 51 %}bg-danger
@@ -39,7 +39,7 @@
 
       <!-- Completion Bar -->
       <div class="mt-4">
-        <small class="fw-semibold text-muted">Overall Completed: {{ overall_completion }}%</small>
+        <small class="fw-semibold text-muted">Overall Completed:</small>
         <div class="progress" style="height: 20px;">
           <div class="progress-bar" style="width: {{ overall_completion }}%;">
             {{ overall_completion }}%

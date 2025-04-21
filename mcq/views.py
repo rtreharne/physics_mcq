@@ -25,6 +25,7 @@ from datetime import datetime
 from django.db.models import Sum, Avg, Count, F
 from django.contrib.admin.views.decorators import staff_member_required
 from collections import defaultdict
+from django.db.models import Exists, OuterRef, Subquery, BooleanField, ExpressionWrapper, Q
 
 
 
@@ -93,34 +94,47 @@ def home(request):
 
 
 
+
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import OuterRef, Exists
+import random
+
+@login_required
 def filtered_quiz(request):
-    chain_length = 1  # default
-    if request.user.is_authenticated:
-        chain_length = min(request.user.profile.chain_length, 7)
+    chain_length = min(request.user.profile.chain_length, 7)
 
-    # Parse subtopic IDs from subtopics_list param
-    subtopic_ids = request.GET.get('subtopics_list', '')
-    subtopic_ids = [int(s) for s in subtopic_ids.split(',') if s.isdigit()]
-
+    subtopic_ids = [int(s) for s in request.GET.get('subtopics_list', '').split(',') if s.isdigit()]
     num_questions = int(request.GET.get('num_questions', 10))
     time_per_question = float(request.GET.get('time_per_question', 1.0))
 
-    # Filter by subtopics and preload related topic + subtopic to avoid DB hits
-    queryset = Question.objects.select_related('topic', 'subtopic').filter(
-        subtopic__id__in=subtopic_ids
-    ).distinct()
+    # Subquery to check if the user has answered this question correctly before
+    correct_before = QuizResponse.objects.filter(
+        question=OuterRef('pk'),
+        attempt__user=request.user,
+        correct=True
+    )
 
-    questions = list(queryset)
-    random.shuffle(questions)
-    questions = questions[:num_questions]
+    # Annotate with whether the user has answered correctly before
+    queryset = Question.objects.select_related('topic', 'subtopic') \
+        .filter(subtopic__id__in=subtopic_ids) \
+        .annotate(correct_before=Exists(correct_before))
+
+    questions = list(queryset.distinct())
+
+    # Split into unmastered and mastered
+    unmastered = [q for q in questions if not q.correct_before]
+    mastered = [q for q in questions if q.correct_before]
+    random.shuffle(mastered)
+
+    # Combine, prioritizing unmastered
+    questions = (unmastered + mastered)[:num_questions]
 
     return render(request, 'mcq/quiz.html', {
         'questions': questions,
         'time_per_question': time_per_question,
         'chain_length': chain_length,
     })
-
-
 
 
 

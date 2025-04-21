@@ -33,6 +33,10 @@
           {{ question.difficulty|title }}
         </span>
 
+        {% if question.correct_before %}
+          <span class="badge text-dark">✅ Mastered</span>
+        {% endif %}
+
         <small class="ms-2 text-muted">
           {{ question.topic.name }}{% if question.subtopic %} → {{ question.subtopic.name }}{% endif %}
         </small>
