@@ -97,11 +97,14 @@
 <div class="bottom-buffer"></div>
 
 <!-- Hidden meta info -->
+
+
 <div id="quiz-meta"
      data-time-per-question="{{ time_per_question|default:1|floatformat:2 }}"
-     data-user-authenticated="{{ user.is_authenticated }}"
+     data-user-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}"
      data-chain-length="{{ chain_length }}">
 </div>
+
 
 <!-- Buy Me a Coffee Modal -->
 <div class="modal fade" id="coffeeModal" tabindex="-1" aria-labelledby="coffeeModalLabel" aria-hidden="true">

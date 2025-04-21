@@ -1,15 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const chainLength = parseInt(document.getElementById("quiz-meta")?.dataset.chainLength || "1");
+  const quizMeta = document.getElementById("quiz-meta");
+  const isAuthenticated = quizMeta.dataset.userAuthenticated === "True";
+  const chainLength = parseInt(quizMeta.dataset.chainLength || "1");
+  const timeLimit = parseFloat(quizMeta.dataset.timePerQuestion) * 60;
 
   const questions = document.querySelectorAll('.quiz-question');
   const nextBtn = document.getElementById('next-btn');
   const progressText = document.getElementById('quiz-progress');
   const timerDisplay = document.getElementById('timer-display');
+
   let current = 0;
-
-  const timeLimit = parseFloat(document.getElementById('quiz-meta').dataset.timePerQuestion) * 60;
   let timerInterval = null;
-
   let userAnswers = {};
   let quizStartTime = null;
   let quizEndTime = null;
@@ -31,18 +32,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const secs = remaining % 60;
       timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-      if (remaining <= 10) {
-        timerDisplay.classList.add('timer-warning');
-      } else {
-        timerDisplay.classList.remove('timer-warning');
-      }
+      timerDisplay.classList.toggle('timer-warning', remaining <= 10);
     }
 
     updateDisplay();
     timerInterval = setInterval(() => {
       remaining--;
       updateDisplay();
-
       if (remaining <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -69,13 +65,12 @@ document.addEventListener("DOMContentLoaded", function () {
       showQuestion(current);
     } else {
       quizEndTime = new Date();
-      submitResults();
+      handleQuizCompletion();
     }
   }
 
   function showQuestion(index) {
     questions.forEach((q, i) => q.style.display = i === index ? 'block' : 'none');
-
     nextBtn.disabled = true;
     nextBtn.textContent = index === questions.length - 1 ? 'Finish' : 'Next';
 
@@ -96,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
       showQuestion(current);
     } else {
       quizEndTime = new Date();
-      submitResults();
+      handleQuizCompletion();
     }
   });
 
@@ -108,6 +103,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+
+  function handleQuizCompletion() {
+    submitResults();  // Always submit
+  }
+  
 
   function submitResults() {
     const payload = generateResultsPayload();

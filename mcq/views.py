@@ -100,41 +100,47 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import OuterRef, Exists
 import random
 
-@login_required
+from django.shortcuts import redirect
+
 def filtered_quiz(request):
-    chain_length = min(request.user.profile.chain_length, 7)
+    user = request.user if request.user.is_authenticated else None
+    chain_length = min(user.profile.chain_length, 7) if user else 1
 
     subtopic_ids = [int(s) for s in request.GET.get('subtopics_list', '').split(',') if s.isdigit()]
     num_questions = int(request.GET.get('num_questions', 10))
     time_per_question = float(request.GET.get('time_per_question', 1.0))
 
-    # Subquery to check if the user has answered this question correctly before
-    correct_before = QuizResponse.objects.filter(
-        question=OuterRef('pk'),
-        attempt__user=request.user,
-        correct=True
-    )
+    queryset = Question.objects.select_related('topic', 'subtopic').filter(
+        subtopic__id__in=subtopic_ids
+    ).distinct()
 
-    # Annotate with whether the user has answered correctly before
-    queryset = Question.objects.select_related('topic', 'subtopic') \
-        .filter(subtopic__id__in=subtopic_ids) \
-        .annotate(correct_before=Exists(correct_before))
+    if user:
+        # Prioritize unseen questions for authenticated users
+        correct_before = QuizResponse.objects.filter(
+            question=OuterRef('pk'),
+            attempt__user=user,
+            correct=True
+        )
+        queryset = queryset.annotate(correct_before=Exists(correct_before))
 
-    questions = list(queryset.distinct())
-
-    # Split into unmastered and mastered
-    unmastered = [q for q in questions if not q.correct_before]
-    mastered = [q for q in questions if q.correct_before]
-    random.shuffle(mastered)
-
-    # Combine, prioritizing unmastered
-    questions = (unmastered + mastered)[:num_questions]
+        all_questions = list(queryset)
+        unmastered = [q for q in all_questions if not q.correct_before]
+        mastered = [q for q in all_questions if q.correct_before]
+        random.shuffle(mastered)
+        questions = (unmastered + mastered)[:num_questions]
+    else:
+        # For anonymous users, just shuffle the full queryset
+        questions = list(queryset)
+        random.shuffle(questions)
+        questions = questions[:num_questions]
 
     return render(request, 'mcq/quiz.html', {
         'questions': questions,
         'time_per_question': time_per_question,
         'chain_length': chain_length,
+        'is_authenticated': request.user.is_authenticated,  # Add this to control result saving in JS
     })
+ 
 
 
 
@@ -146,68 +152,29 @@ def result(request):
 @require_POST
 @csrf_protect
 #@login_required  # remove this line if anonymous attempts are allowed
-def save_quiz_results(request):
-    #try:
-    user = request.user if request.user.is_authenticated else None
+@require_POST
+def save_quiz(request):
     data = json.loads(request.body)
 
-    score = int(data.get('score'))
-    total_questions = int(data.get('total_questions'))
-    time_taken = int(data.get('time_taken'))
-    points = int(data.get('points', score * 100))
-
+    user = request.user if request.user.is_authenticated else None
     attempt = QuizAttempt.objects.create(
         user=user,
-        score=score,
-        total_questions=total_questions,
-        time_taken_seconds=time_taken,
-        points=points,
-        date_taken=now()
+        score=data['score'],
+        total_questions=data['total_questions'],
+        time_taken_seconds=data['time_taken'],
+        points=data['points']
     )
 
-    keyword_ids = data.get('keywords', [])
-    if keyword_ids:
-        attempt.keywords.set(Keyword.objects.filter(id__in=keyword_ids))
-
-    responses = data.get('responses', [])
-    for r in responses:
-        q_id = r.get('question_id')
-        user_answer = r.get('user_answer')
-        correct = r.get('correct')
-
-        if not (q_id and user_answer is not None and correct is not None):
-            continue  # skip invalid entries
-
-        question = Question.objects.get(id=q_id)
+    for r in data['responses']:
         QuizResponse.objects.create(
             attempt=attempt,
-            question=question,
-            user_answer=user_answer,
-            correct=correct
+            question_id=r['question_id'],
+            user_answer=r['user_answer'],
+            correct=r['correct']
         )
 
-    if user:
-        profile, _ = Profile.objects.get_or_create(user=user)
-        chain_length = min(profile.chain_length, 7)
-        profile.update_chain()
-        profile.points += score * 100 * profile.chain_length
-        profile.save()
+    return JsonResponse({'success': True, 'attempt_id': attempt.id})
 
-        attempt.points = attempt.points * profile.chain_length
-        attempt.save()
-        attempt_count = QuizAttempt.objects.filter(user=user).count()
-    else:
-        attempt_count = 0  # anonymous
-
-
-    return JsonResponse({
-        'success': True, 
-        'attempt_id': attempt.id,
-        'attempt_count': attempt_count,
-        })
-
-    # except Exception as e:
-    #     return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 def get_leaderboard_data():
@@ -383,12 +350,22 @@ def quiz_history(request):
 
 
 
-@login_required
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+
 def view_attempt(request, attempt_id):
-    attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
-    responses = attempt.responses.select_related('question')
+    attempt = get_object_or_404(QuizAttempt, id=attempt_id)
+
+    # Authenticated users can only see their own attempts
+    if attempt.user:
+        if not request.user.is_authenticated or request.user != attempt.user:
+            return HttpResponseForbidden("You are not allowed to view this attempt.")
+
+    # Anonymous attempts are public
+    responses = QuizResponse.objects.select_related('question').filter(attempt=attempt)
 
     return render(request, 'mcq/view_attempt.html', {
         'attempt': attempt,
         'responses': responses
     })
+
