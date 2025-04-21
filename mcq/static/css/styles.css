@@ -428,3 +428,13 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
   background-color: #f8f9fa;
   cursor: pointer;
 }
+
+.correct {
+  background-color: #e9fbe9; /* subtle green */
+  border-left: 4px solid #28a745; /* Bootstrap green */
+}
+
+.incorrect {
+  background-color: #fdecec; /* subtle red */
+  border-left: 4px solid #dc3545; /* Bootstrap red */
+}

@@ -15,29 +15,67 @@
 <hr>
 
 {% for r in responses %}
-<div class="card mb-3 {% if r.correct %}border-success{% else %}border-danger{% endif %}">
-  <div class="card-body">
-    <h5 class="card-title">{{ r.question.question_text|safe }}</h5>
-    <p><strong>Your answer:</strong> {{ r.user_answer }}</p>
-    <p><strong>Correct answer:</strong> {{ r.question.correct_option }}</p>
+  <div class="card mb-4 shadow-sm {% if r.correct %}correct{% else %}incorrect{% endif %}">
 
-    {% if r.question.explanation %}
-      <div class="alert alert-info">{{ r.question.explanation }}</div>
-    {% endif %}
+    <div class="card-body">
+      <p class="mb-1">
+        <span class="badge 
+          {% if r.question.difficulty == 'easy' %}bg-success
+          {% elif r.question.difficulty == 'medium' %}bg-primary
+          {% elif r.question.difficulty == 'hard' %}bg-warning text-dark
+          {% elif r.question.difficulty == 'hardcore' %}bg-danger
+          {% else %}bg-secondary
+          {% endif %}
+        ">
+          {{ r.question.difficulty|capfirst }}
+        </span>
+        <small class="text-muted ms-2">
+          {{ r.question.topic.name }}{% if r.question.subtopic %} → {{ r.question.subtopic.name }}{% endif %}
+        </small>
+      </p>
 
-    {% if user.is_superuser %}
-      {% if r.question.flagged %}
-        <span class="badge bg-warning text-dark mt-2 d-inline-block">🚩 Already flagged</span>
-      {% else %}
-        <button class="btn btn-sm btn-outline-danger flag-btn mt-2"
-                data-question-id="{{ r.question.id }}">
-          🚩 Flag for review
-        </button>
+      <h5 class="card-title">{{ r.question.question_text|safe }}</h5>
+
+      <p><strong>Your answer:</strong> 
+        {{ r.user_answer }}.
+        {% with "option_"|add:r.user_answer|lower as option_attr %}
+          {{ r.question|get_attr:option_attr }}
+        {% endwith %}
+
+        {% if r.correct %}
+          ✅
+        {% else %}
+          <span style="color:red;">✖️</span>
+        {% endif %}
+      </p>
+      
+      <p><strong>Correct answer:</strong> 
+        {{ r.question.correct_option }}.
+        {% with "option_"|add:r.user_answer|lower as option_attr %}
+          {{ r.question|get_attr:option_attr }}
+        {% endwith %}
+      </p>
+
+      {% if r.question.explanation %}
+        <div class="alert alert-info mt-3"><strong>Explanation:</strong> {{ r.question.explanation }}</div>
       {% endif %}
-{% endif %}
 
+      {% if user.is_superuser %}
+        {% if r.question.flagged %}
+        <a href="/admin/mcq/question/{{ r.question.id }}/change/" 
+        target="_blank" 
+        class="badge bg-warning text-dark mt-2 d-inline-block text-decoration-none">
+       🚩 Already flagged
+     </a>
+     
+        {% else %}
+          <button class="btn btn-sm btn-outline-danger flag-btn mt-2" data-question-id="{{ r.question.id }}">
+            🚩 Flag for review
+          </button>
+        {% endif %}
+      {% endif %}
+    </div>
   </div>
-</div>
 {% endfor %}
 
 {% if user.is_superuser %}

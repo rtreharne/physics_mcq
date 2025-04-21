@@ -24,6 +24,9 @@ from django.contrib.auth import get_user_model
 from datetime import datetime
 from django.db.models import Sum, Avg, Count, F
 from django.contrib.admin.views.decorators import staff_member_required
+from collections import defaultdict
+
+
 
 @require_POST
 @staff_member_required
@@ -220,62 +223,85 @@ def leaderboard_view(request):
         "all_time_leaderboard": all_time
     })
 
+from collections import defaultdict
+from mcq.models import Topic, Subtopic, Question, QuizResponse
+from django.db.models import Count
+
 def get_topic_accuracy(user):
-    responses = QuizResponse.objects.filter(
-        attempt__user=user
-    ).select_related('question__topic', 'question__subtopic')
+    responses = QuizResponse.objects.filter(attempt__user=user).select_related('question__topic', 'question__subtopic')
+    unique_correct = responses.filter(correct=True).values('question_id').distinct()
 
-    topic_stats = {}
+    # Count how many distinct questions per topic have been answered correctly
+    correct_by_topic = defaultdict(set)
+    correct_by_subtopic = defaultdict(set)
 
+    all_topic_totals = Question.objects.values('topic').annotate(total=Count('id'))
+    all_subtopic_totals = Question.objects.exclude(subtopic=None).values('subtopic').annotate(total=Count('id'))
+
+    topic_data = defaultdict(lambda: {
+        'correct': 0,
+        'total': 0,
+        'completed': 0,
+        'total_available': 0,
+        'subtopics': defaultdict(lambda: {'correct': 0, 'total': 0})
+    })
+
+    # Aggregate user responses
     for r in responses:
         topic = r.question.topic
         subtopic = r.question.subtopic
-
-        if topic not in topic_stats:
-            topic_stats[topic] = {
-                'correct': 0,
-                'total': 0,
-                'subtopics': {}
-            }
-
-        topic_stats[topic]['total'] += 1
+        topic_data[topic.id]['total'] += 1
         if r.correct:
-            topic_stats[topic]['correct'] += 1
+            topic_data[topic.id]['correct'] += 1
 
         if subtopic:
-            if subtopic not in topic_stats[topic]['subtopics']:
-                topic_stats[topic]['subtopics'][subtopic] = {'correct': 0, 'total': 0}
-            topic_stats[topic]['subtopics'][subtopic]['total'] += 1
+            topic_data[topic.id]['subtopics'][subtopic.id]['total'] += 1
             if r.correct:
-                topic_stats[topic]['subtopics'][subtopic]['correct'] += 1
+                topic_data[topic.id]['subtopics'][subtopic.id]['correct'] += 1
 
-    accuracy_list = []
+    for entry in unique_correct:
+        question = Question.objects.select_related('topic', 'subtopic').get(id=entry['question_id'])
+        topic_data[question.topic.id]['completed'] += 1
 
-    for topic, data in topic_stats.items():
-        subtopics_data = []
-        for subtopic, sub_data in data['subtopics'].items():
-            accuracy = round((sub_data['correct'] / sub_data['total']) * 100, 1) if sub_data['total'] > 0 else 0
-            subtopics_data.append({
+    for entry in all_topic_totals:
+        topic_data[entry['topic']]['total_available'] = entry['total']
+
+    result = []
+    for topic_id, data in topic_data.items():
+        topic = Topic.objects.get(id=topic_id)
+        accuracy = round((data['correct'] / data['total']) * 100) if data['total'] else 0
+        completion_rate = round((data['completed'] / data['total_available']) * 100) if data['total_available'] else 0
+
+        subtopic_results = []
+        for sub_id, subdata in data['subtopics'].items():
+            subtopic = Subtopic.objects.get(id=sub_id)
+            sub_accuracy = round((subdata['correct'] / subdata['total']) * 100) if subdata['total'] else 0
+            subtopic_results.append({
                 'subtopic': subtopic,
-                'correct': sub_data['correct'],
-                'total': sub_data['total'],
-                'accuracy': accuracy
+                'correct': subdata['correct'],
+                'total': subdata['total'],
+                'accuracy': sub_accuracy
             })
 
-        topic_accuracy = round((data['correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0
-
-        accuracy_list.append({
+        result.append({
             'topic': topic,
             'correct': data['correct'],
             'total': data['total'],
-            'accuracy': topic_accuracy,
-            'subtopics': sorted(subtopics_data, key=lambda x: x['subtopic'].name.lower())
+            'accuracy': accuracy,
+            'completed': data['completed'],
+            'total_available': data['total_available'],
+            'completion_rate': completion_rate,
+            'subtopics': subtopic_results
         })
 
-    return sorted(accuracy_list, key=lambda x: x['topic'].name.lower())
+    return result
 
 
 
+
+
+from django.db.models import Count
+from mcq.models import Question, QuizResponse  # Make sure these are imported
 
 @login_required
 def quiz_history(request):
@@ -285,7 +311,8 @@ def quiz_history(request):
     profile = Profile.objects.get(user=user)
 
     # All-time points & ranking
-    points_all_time = profile.points
+    points_all_time = attempts.aggregate(total_points=Sum('points'))['total_points'] or 0
+
     all_time_leaderboard = (
         Profile.objects.annotate(total_points=Sum('user__quizattempt__points'))
         .order_by('-total_points')
@@ -313,6 +340,19 @@ def quiz_history(request):
         attempts.aggregate(avg=Avg(F('score') * 100.0 / F('total_questions')))['avg'] or 0, 1
     )
 
+    # Overall completion and accuracy
+    total_available_questions = Question.objects.count()
+
+    unique_correct_questions = (
+        QuizResponse.objects.filter(attempt__user=user, correct=True)
+        .values('question_id')
+        .distinct()
+        .count()
+    )
+
+    overall_completion = round((unique_correct_questions / total_available_questions) * 100, 1) if total_available_questions else 0
+    overall_accuracy = avg_score  # Reuse from above
+
     return render(request, 'mcq/quiz_history.html', {
         'attempts': attempts,
         'topic_accuracy': topic_accuracy,
@@ -322,7 +362,10 @@ def quiz_history(request):
         'all_time_rank': all_time_rank,
         'total_questions': total_questions,
         'avg_score': avg_score,
+        'overall_completion': overall_completion,
+        'overall_accuracy': overall_accuracy,
     })
+
 
 
 
