@@ -85,12 +85,67 @@
   {% endfor %}
 </div>
 
+<!-- Modal-like Calculator Container -->
+
+<div id="calculator-container" class="calculator-casio" style="display:none;">
+  <input type="text" id="calc-display" class="form-control text-end mb-2" readonly />
+
+  <div class="calc-grid">
+    <button class="calc-btn" data-val="7">7</button>
+    <button class="calc-btn" data-val="8">8</button>
+    <button class="calc-btn" data-val="9">9</button>
+    <button class="calc-btn op-btn" data-val="/">÷</button>
+
+    <button class="calc-btn" data-val="4">4</button>
+    <button class="calc-btn" data-val="5">5</button>
+    <button class="calc-btn" data-val="6">6</button>
+    <button class="calc-btn op-btn" data-val="*">×</button>
+
+    <button class="calc-btn" data-val="1">1</button>
+    <button class="calc-btn" data-val="2">2</button>
+    <button class="calc-btn" data-val="3">3</button>
+    <button class="calc-btn op-btn" data-val="-">−</button>
+
+    <button class="calc-btn" data-val="0">0</button>
+    <button class="calc-btn" data-val=".">.</button>
+    <button class="calc-btn" data-val="π">π</button>
+    <button class="calc-btn op-btn" data-val="+">+</button>
+
+    <button class="calc-btn func-btn" data-val="sin(">sin</button>
+    <button class="calc-btn func-btn" data-val="cos(">cos</button>
+    <button class="calc-btn func-btn" data-val="tan(">tan</button>
+    <button class="calc-btn" data-val="^">xʸ</button>
+
+    <button class="calc-btn func-btn" data-val="ln(">ln</button>
+    <button class="calc-btn func-btn" data-val="log(">log</button>
+    <button class="calc-btn func-btn" data-val="Math.exp(">eˣ</button>
+    <button class="calc-btn func-btn" data-val="×10^">×10ˣ</button>
+    <button class="calc-btn func-btn" data-val="√(">√</button>
+
+    <button class="calc-btn op-btn" data-val="(">(</button>
+    <button class="calc-btn op-btn" data-val=")">)</button>
+    <button class="calc-btn equals-btn" data-val="=">=</button>
+
+    <button class="calc-btn clear-btn" data-val="AC">AC</button>
+    <button class="calc-btn clear-btn" data-val="DEL">DEL</button>
+  </div>
+</div>
+
+
+
+
 <!-- Fixed bottom bar -->
 <div class="bottom-bar d-flex justify-content-between align-items-center">
   <div id="question-timer" class="text-muted fw-semibold">
     Time left: <span id="timer-display">--:--</span>
   </div>
-  <button id="next-btn" class="btn btn-primary btn-lg" disabled>Next</button>
+  
+  <div class="d-flex gap-2 align-items-center">
+    <button id="toggle-calculator-btn" class="ms-2 btn-light border calculator-toggle" onclick="toggleCalculator()">
+      <i class="bi bi-calculator"></i>
+    </button>
+    <button id="next-btn" class="btn btn-primary btn-lg" disabled>Next</button>
+  </div>
 </div>
 
 <!-- Buffer -->
@@ -130,6 +185,26 @@
 
 <!-- Scripts -->
 <script src="{% static 'js/quiz.js' %}"></script>
+<script src="{% static 'js/calculator.js' %}"></script>
+
+<script>// Attach toggle
+  document.getElementById('toggle-calculator').addEventListener('click', toggleCalculator);
+  
+  // Attach calculator button logic
+  document.querySelectorAll('.calc-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const val = button.dataset.val;
+      if (val === 'DEL') {
+        deleteLast();
+      } else if (val === '=') {
+        calculateResult();
+      } else {
+        insertToDisplay(val);
+      }
+    });
+  });
+</script>
+
 
 {% if user.is_superuser %}
 <script>
