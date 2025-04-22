@@ -88,48 +88,75 @@
 <!-- Modal-like Calculator Container -->
 
 <div id="calculator-container" class="calculator-casio" style="display:none;">
+  <div class="calculator-header d-flex justify-content-between align-items-center mb-2 px-1">
+    <span class="calc-brand text-primary fw-bold">Treharnio</span>
+    <span class="calc-model text-muted fst-italic">fx-83QT</span>
+  </div>
+
+  <div id="calc-mode-indicator" class="text-end text-muted small mb-1">Mode: °</div>
+  
+
   <input type="text" id="calc-display" class="form-control text-end mb-2" readonly />
 
-  <div class="calc-grid">
+  
+  
+
+  <!-- Top 2 rows: 6 buttons each -->
+  <div class="calc-grid-6 half-height">
+    <button class="calc-btn func-btn" data-val="sin(">sin</button>
+    <button class="calc-btn func-btn" data-val="cos(">cos</button>
+    <button class="calc-btn func-btn" data-val="tan(">tan</button>
+    <button class="calc-btn func-btn" data-val="ln(">ln</button>
+    <button class="calc-btn func-btn" data-val="log(">log</button>
+    <button class="calc-btn func-btn" data-val="Math.exp(">eˣ</button>
+
+    <!-- New Row: Inverse Trig + Constants -->
+
+    <button class="calc-btn func-btn" data-val="asin(">sin⁻¹</button>
+    <button class="calc-btn func-btn" data-val="acos(">cos⁻¹</button>
+    <button class="calc-btn func-btn" data-val="atan(">tan⁻¹</button>
+    <button class="calc-btn const-btn" data-val="e_const">e</button>
+    <button class="calc-btn const-btn" data-val="c_const">c</button>
+    <button class="calc-btn op-btn" data-val="" id="toggle-mode-btn">°↔π</button>
+
+
+    <button class="calc-btn func-btn" data-val="√(">√</button>
+    <button class="calc-btn func-btn" data-val="^2">x²</button>
+    <button class="calc-btn op-btn" data-val="(">(</button>
+    <button class="calc-btn op-btn" data-val=")">)</button>
+    <button class="calc-btn func-btn" data-val="^">xʸ</button>
+    <button class="calc-btn" data-val="π">π</button>
+  </div>
+
+  <!-- Bottom rows: 5 buttons each -->
+  <div class="calc-grid-5 mt-3">
     <button class="calc-btn" data-val="7">7</button>
     <button class="calc-btn" data-val="8">8</button>
     <button class="calc-btn" data-val="9">9</button>
-    <button class="calc-btn op-btn" data-val="/">÷</button>
+    <button class="calc-btn clear-btn" data-val="DEL">DEL</button>
+    <button class="calc-btn clear-btn" data-val="AC">AC</button>
 
     <button class="calc-btn" data-val="4">4</button>
     <button class="calc-btn" data-val="5">5</button>
     <button class="calc-btn" data-val="6">6</button>
     <button class="calc-btn op-btn" data-val="*">×</button>
+    <button class="calc-btn op-btn" data-val="/">÷</button>
 
     <button class="calc-btn" data-val="1">1</button>
     <button class="calc-btn" data-val="2">2</button>
     <button class="calc-btn" data-val="3">3</button>
+    <button class="calc-btn op-btn" data-val="+">+</button>
     <button class="calc-btn op-btn" data-val="-">−</button>
 
     <button class="calc-btn" data-val="0">0</button>
     <button class="calc-btn" data-val=".">.</button>
-    <button class="calc-btn" data-val="π">π</button>
-    <button class="calc-btn op-btn" data-val="+">+</button>
-
-    <button class="calc-btn func-btn" data-val="sin(">sin</button>
-    <button class="calc-btn func-btn" data-val="cos(">cos</button>
-    <button class="calc-btn func-btn" data-val="tan(">tan</button>
-    <button class="calc-btn" data-val="^">xʸ</button>
-
-    <button class="calc-btn func-btn" data-val="ln(">ln</button>
-    <button class="calc-btn func-btn" data-val="log(">log</button>
-    <button class="calc-btn func-btn" data-val="Math.exp(">eˣ</button>
-    <button class="calc-btn func-btn" data-val="×10^">×10ˣ</button>
-    <button class="calc-btn func-btn" data-val="√(">√</button>
-
-    <button class="calc-btn op-btn" data-val="(">(</button>
-    <button class="calc-btn op-btn" data-val=")">)</button>
+    <button class="calc-btn" data-val="×10^">×10ˣ</button>
+    <button class="calc-btn" data-val="Ans">Ans</button>
     <button class="calc-btn equals-btn" data-val="=">=</button>
-
-    <button class="calc-btn clear-btn" data-val="AC">AC</button>
-    <button class="calc-btn clear-btn" data-val="DEL">DEL</button>
   </div>
 </div>
+
+
 
 
 
