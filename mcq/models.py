@@ -10,7 +10,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     anonymous_name = models.CharField(max_length=150, unique=True)
     points = models.PositiveIntegerField(default=0)
-    chain_length = models.IntegerField(default=0)
+    chain_length = models.IntegerField(default=1)
     last_chain_date = models.DateField(null=True, blank=True)
 
     def update_chain(self):
