@@ -1,0 +1,11 @@
+topic,subtopic,keywords,exam_boards,question_text,option_a,option_b,option_c,option_d,correct_option,explanation,difficulty
+Measurements and Uncertainties,SI Units and Prefixes,SI units;force;newton,Eduqas;AQA;OCR;Edexcel,What is the SI unit of force?,Joule,Watt,Newton,Pascal,C,The SI unit of force is the Newton (N).,easy
+Measurements and Uncertainties,SI Units and Prefixes,prefix;milli;powers of ten,Eduqas;AQA;OCR;Edexcel,Which of the following prefixes means 10⁻³?,micro,milli,centi,nano,B,Milli (m) means 1/1000 or 10⁻³.,easy
+Measurements and Uncertainties,SI Units and Prefixes,SI units;current;ampere,Eduqas;AQA;OCR;Edexcel,What is the SI base unit for electric current?,Volt,Coulomb,Ampere,Ohm,C,The SI base unit for current is the Ampere (A).,easy
+Measurements and Uncertainties,SI Units and Prefixes,prefix;mega;powers of ten,Eduqas;AQA;OCR;Edexcel,Which prefix corresponds to a factor of 10⁶?,kilo,mega,giga,milli,B,Mega (M) represents 10⁶.,easy
+Measurements and Uncertainties,SI Units and Prefixes,conversion;kilometres;metres,Eduqas;AQA;OCR;Edexcel,Convert 5.0 km to metres.,50 m,500 m,5000 m,0.5 m,C,"1 km = 1000 m, so 5.0 km = 5000 m.",easy
+Measurements and Uncertainties,SI Units and Prefixes,SI units;energy;joule,Eduqas;AQA;OCR;Edexcel,What is the SI unit of energy?,Newton,Pascal,Joule,Watt,C,The SI unit of energy is the Joule (J).,easy
+Measurements and Uncertainties,SI Units and Prefixes,prefix;nano;small units,Eduqas;AQA;OCR;Edexcel,Which of these prefixes means 10⁻⁹?,micro,nano,pico,centi,B,Nano (n) corresponds to 10⁻⁹.,medium
+Measurements and Uncertainties,SI Units and Prefixes,derived unit;pascal;pressure,Eduqas;AQA;OCR;Edexcel,The unit 'Pascal' is equivalent to which of the following?,kg m⁻¹ s⁻²,kg m s⁻¹,kg m⁻¹ s⁻¹,kg m⁻¹ s⁻²,D,1 Pa = 1 N/m² = 1 kg m⁻¹ s⁻².,hard
+Measurements and Uncertainties,SI Units and Prefixes,prefix;tera;large numbers,Eduqas;AQA;OCR;Edexcel,Which prefix corresponds to 10¹²?,giga,tera,mega,pico,B,Tera (T) corresponds to 10¹².,medium
+Measurements and Uncertainties,SI Units and Prefixes,SI units;temperature;kelvin,Eduqas;AQA;OCR;Edexcel,What is the SI base unit of temperature?,Celsius,Fahrenheit,Kelvin,Degree,C,The SI base unit for temperature is the Kelvin (K).,easy
