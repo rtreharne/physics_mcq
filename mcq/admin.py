@@ -68,7 +68,7 @@ admin.site.register(ExamBoard)
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('question_text', 'topic', 'subtopic', 'difficulty', 'flagged')
-    list_filter = ('flagged', 'difficulty')
+    list_filter = ('flagged', 'difficulty', 'topic',)
     search_fields = ('question_text',)
     list_editable = ('flagged',)
     

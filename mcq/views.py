@@ -369,3 +369,48 @@ def view_attempt(request, attempt_id):
         'responses': responses
     })
 
+from django.db.models import Q
+
+@login_required  # or remove if anonymous users should be allowed
+def keyword_quiz(request):
+    user = request.user if request.user.is_authenticated else None
+    chain_length = min(user.profile.chain_length, 7) if user else 1
+
+    keyword_list = request.GET.get('keyword_list', '')
+    keywords = [kw.strip() for kw in keyword_list.split(',') if kw.strip()]
+    num_questions = int(request.GET.get('num_questions', 10))
+    time_per_question = float(request.GET.get('time_per_question', 1.0))
+
+    queryset = Question.objects.select_related('topic', 'subtopic').distinct()
+
+    if keywords:
+        keyword_filters = Q()
+        for kw in keywords:
+            keyword_filters |= Q(keywords__name__icontains=kw)
+        queryset = queryset.filter(keyword_filters)
+
+    if user:
+        correct_before = QuizResponse.objects.filter(
+            question=OuterRef('pk'),
+            attempt__user=user,
+            correct=True
+        )
+        queryset = queryset.annotate(correct_before=Exists(correct_before))
+
+        all_questions = list(queryset)
+        unmastered = [q for q in all_questions if not q.correct_before]
+        mastered = [q for q in all_questions if q.correct_before]
+        random.shuffle(mastered)
+        questions = (unmastered + mastered)[:num_questions]
+    else:
+        questions = list(queryset)
+        random.shuffle(questions)
+        questions = questions[:num_questions]
+
+    return render(request, 'mcq/quiz.html', {
+        'questions': questions,
+        'time_per_question': time_per_question,
+        'chain_length': chain_length,
+        'is_authenticated': request.user.is_authenticated,
+    })
+

@@ -22,16 +22,17 @@
         data-flagged="{{ question.flagged|yesno:'true,false' }}"
         style="{% if not forloop.first %}display:none;{% endif %}">
 
-      <p class="text-muted mb-2">
-        <span class="badge 
-          {% if question.difficulty == 'easy' %}bg-success
-          {% elif question.difficulty == 'medium' %}bg-primary
-          {% elif question.difficulty == 'hard' %}bg-warning text-dark
-          {% elif question.difficulty == 'hardcore' %}bg-danger
-          {% else %}bg-secondary
-          {% endif %}">
-          {{ question.difficulty|title }}
-        </span>
+              <p class="text-muted mb-2">
+                <span class="badge 
+                  {% if question.difficulty == 'easy' %}bg-success
+                  {% elif question.difficulty == 'medium' %}bg-primary
+                  {% elif question.difficulty == 'hard' %}bg-warning text-dark
+                  {% elif question.difficulty == 'hardcore' %}bg-danger
+                  {% elif question.difficulty == 'exam' %}bg-info text-dark
+                  {% else %}bg-secondary
+                  {% endif %}">
+                  {{ question.difficulty|title }}
+                </span>
 
         {% if question.correct_before %}
           <span class="badge text-dark">✅ Mastered</span>

@@ -24,6 +24,7 @@
           {% elif r.question.difficulty == 'medium' %}bg-primary
           {% elif r.question.difficulty == 'hard' %}bg-warning text-dark
           {% elif r.question.difficulty == 'hardcore' %}bg-danger
+          {% elif question.difficulty == 'exam' %}bg-info text-dark
           {% else %}bg-secondary
           {% endif %}
         ">

@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('', views.home, name='home'),
     path('quiz/', views.filtered_quiz, name='quiz'),
+    path('keyword-quiz/', views.keyword_quiz, name='keyword_quiz'),
     path('result/', views.result, name='result'),
     path('save-quiz/', views.save_quiz, name='save_quiz'),
     path('my-quizzes/', views.quiz_history, name='quiz_history'),

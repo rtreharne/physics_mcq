@@ -58,6 +58,7 @@ class Question(models.Model):
         ('medium', 'Medium'),
         ('hard', 'Hard'),
         ('hardcore', 'Hardcore'),
+        ('exam', 'Exam'),
     ]
 
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)

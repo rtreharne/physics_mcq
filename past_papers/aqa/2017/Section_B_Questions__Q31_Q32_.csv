@@ -1,0 +1,3 @@
+topic,subtopic,question_text,option_a,option_b,option_c,option_d,correct_option,explanation,difficulty
+Electricity,Internal Resistance,A 1.5 V cell with internal resistance 0.50 Ω is connected to a 2.5 Ω resistor. What is the current in the circuit?,0.60 A,0.75 A,1.0 A,3.0 A,A,Total resistance = 2.5 + 0.5 = 3.0 Ω. I = V / R = 1.5 / 3.0 = 0.50 A.,Exam
+Waves and Optics,"Wave Properties (v = fλ, types of waves)",A wave travels at 340 m/s and has a frequency of 1700 Hz. What is its wavelength?,0.20 m,0.50 m,2.0 m,5.0 m,A,Use λ = v / f = 340 / 1700 = 0.20 m.,Exam

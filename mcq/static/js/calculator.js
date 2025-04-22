@@ -142,8 +142,10 @@ function calculateResult() {
     .replace(/√\(/g, 'Math.sqrt(')
     .replace(/π/g, 'Math.PI')
     .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E') // Euler's number only, not part of scientific notation
-    .replace(/(\d+)\^2/g, 'Math.pow($1, 2)')
-    .replace(/([0-9.]+|\([^()]+\))\^(-?[0-9.]+)/g, 'Math.pow($1, $2)')
+    // Replace x^2 (any number) and general x^y syntax
+    .replace(/([0-9.]+|\([^()]+\))\^2/g, (_, base) => `Math.pow(${base}, 2)`)
+    .replace(/([0-9.]+|\([^()]+\))\^(-?[0-9.]+)/g, (_, base, exp) => `Math.pow(${base}, ${exp})`)
+
     // .replace(/(?<![eE])10\^(-?\d+)/g, 'Math.pow(10, $1)');
 
 
