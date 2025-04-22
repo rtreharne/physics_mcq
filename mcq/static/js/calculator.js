@@ -116,24 +116,36 @@ function calculateResult() {
   const display = document.getElementById('calc-display');
   try {
     let expression = display.value
-      .replace(/×/g, '*').replace(/÷/g, '/').replace(/Ans/g, previousAnswer || '0');
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/Ans/g, previousAnswer || '0');
 
-    // Convert trig expressions
+    // Handle ×10^X as scientific notation
+    expression = expression.replace(/(\d+(?:\.\d+)?)\*10\^(-?\d+)/g, (_, base, exp) => {
+      return `(${base} * Math.pow(10, ${exp}))`;
+    });
+
+    // Trig conversions
     expression = expression
-      .replace(/sin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
-      .replace(/cos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
-      .replace(/tan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
-      .replace(/asin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180 / Math.PI)` : `Math.asin(${val})`)
-      .replace(/acos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180 / Math.PI)` : `Math.acos(${val})`)
-      .replace(/atan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180 / Math.PI)` : `Math.atan(${val})`)
-      .replace(/log\(/g, 'Math.log10(')
-      .replace(/ln\(/g, 'Math.log(')
-      .replace(/exp\(/g, 'Math.exp(')
-      .replace(/√\(/g, 'Math.sqrt(')
-      .replace(/π/g, 'Math.PI')
-      .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E')
-      .replace(/(\d+)\^2/g, 'Math.pow($1, 2)')
-      .replace(/([0-9.]+|\([^()]+\))\^(-?[0-9.]+)/g, 'Math.pow($1, $2)');
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/Ans/g, previousAnswer || '0')
+    .replace(/sin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
+    .replace(/cos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
+    .replace(/tan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
+    .replace(/asin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180 / Math.PI)` : `Math.asin(${val})`)
+    .replace(/acos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180 / Math.PI)` : `Math.acos(${val})`)
+    .replace(/atan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180 / Math.PI)` : `Math.atan(${val})`)
+    .replace(/log\(/g, 'Math.log10(')
+    .replace(/ln\(/g, 'Math.log(')
+    .replace(/exp\(/g, 'Math.exp(')
+    .replace(/√\(/g, 'Math.sqrt(')
+    .replace(/π/g, 'Math.PI')
+    .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E') // Euler's number only, not part of scientific notation
+    .replace(/(\d+)\^2/g, 'Math.pow($1, 2)')
+    .replace(/([0-9.]+|\([^()]+\))\^(-?[0-9.]+)/g, 'Math.pow($1, $2)')
+    // .replace(/(?<![eE])10\^(-?\d+)/g, 'Math.pow(10, $1)');
+
 
     console.log("Evaluating:", expression);
     const result = eval(expression);
@@ -148,7 +160,6 @@ function calculateResult() {
   }
 }
 
-  
   
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -197,7 +208,7 @@ document.addEventListener('click', function (e) {
     } else if (e.key === 'Escape') {
       clearDisplay();
       e.preventDefault();
-    } else if (e.key === 'e') {
+    } else if (e.key === 'q') {
       insertToDisplay("1.602e-19");  // electron charge
       e.preventDefault();
     } else if (e.key === 'c') {
@@ -221,7 +232,7 @@ document.addEventListener('click', function (e) {
     } else if (e.key === 'm') {
       insertToDisplay("9.109e-31");  // Electron mass
       e.preventDefault();
-    } else if (e.key === 'E') {
+    } else if (e.key === 'e') {
       insertToDisplay("×10^");  // Scientific notation
       e.preventDefault();
     }
