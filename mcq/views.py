@@ -22,7 +22,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
-from django.db.models import Sum, Avg, Count, F
+from django.db.models import Sum, Avg, Count, F, Max
 from django.contrib.admin.views.decorators import staff_member_required
 from collections import defaultdict
 from django.db.models import Exists, OuterRef, Subquery, BooleanField, ExpressionWrapper, Q
@@ -144,13 +144,6 @@ def filtered_quiz(request):
     })
  
 
-
-
-def result(request):
-    return render(request, 'mcq/result.html')
-
-
-
 @csrf_protect
 @require_POST
 def save_quiz(request):
@@ -193,9 +186,6 @@ def save_quiz(request):
 
     return JsonResponse({'success': True, 'attempt_id': attempt.id})
 
-
-
-
 def get_leaderboard_data():
     start_of_month = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -214,7 +204,6 @@ def get_leaderboard_data():
     )
 
     return this_month, all_time
-
 
 def leaderboard_view(request):
     this_month, all_time = get_leaderboard_data()
@@ -297,22 +286,14 @@ def get_topic_accuracy(user):
     return result
 
 
-
-
-
-from django.db.models import Count
-from mcq.models import Question, QuizResponse  # Make sure these are imported
-
 @login_required
 def quiz_history(request):
     user = request.user
     attempts = QuizAttempt.objects.filter(user=user).order_by('-date_taken')
     topic_accuracy = get_topic_accuracy(user)
-    profile = Profile.objects.get(user=user)
 
-    # All-time points & ranking
+    # All-time points & rank
     points_all_time = attempts.aggregate(total_points=Sum('points'))['total_points'] or 0
-
     all_time_leaderboard = (
         Profile.objects.annotate(total_points=Sum('user__quizattempt__points'))
         .order_by('-total_points')
@@ -320,7 +301,7 @@ def quiz_history(request):
     )
     all_time_rank = list(all_time_leaderboard).index(user.id) + 1
 
-    # Monthly points & ranking
+    # Monthly points & rank
     start_of_month = datetime(now().year, now().month, 1)
     monthly_attempts = QuizAttempt.objects.filter(date_taken__gte=start_of_month)
     monthly_scores = (
@@ -329,29 +310,33 @@ def quiz_history(request):
         .order_by('-monthly_points')
     )
     user_monthly = next((entry for entry in monthly_scores if entry['user'] == user.id), None)
-    monthly_rank = (
-        list(monthly_scores).index(user_monthly) + 1 if user_monthly else None
-    )
+    monthly_rank = list(monthly_scores).index(user_monthly) + 1 if user_monthly else None
     points_monthly = user_monthly['monthly_points'] if user_monthly else 0
 
-    # New Stats
+    # Overall stats
     total_questions = attempts.aggregate(total=Sum('total_questions'))['total'] or 0
     avg_score = round(
         attempts.aggregate(avg=Avg(F('score') * 100.0 / F('total_questions')))['avg'] or 0, 1
     )
+    total_available = Question.objects.count()
+    unique_correct = QuizResponse.objects.filter(
+        attempt__user=user, correct=True
+    ).values('question_id').distinct().count()
+    overall_completion = round((unique_correct / total_available) * 100, 1) if total_available else 0
+    overall_accuracy = avg_score
 
-    # Overall completion and accuracy
-    total_available_questions = Question.objects.count()
+    # Order topics by most recently quizzed
+    recent_topic_dates = QuizResponse.objects.filter(
+        attempt__user=user
+    ).values('question__topic').annotate(
+        latest=Max('attempt__date_taken')
+    ).order_by('-latest')
 
-    unique_correct_questions = (
-        QuizResponse.objects.filter(attempt__user=user, correct=True)
-        .values('question_id')
-        .distinct()
-        .count()
+    recent_topic_id_order = [entry['question__topic'] for entry in recent_topic_dates]
+    topic_accuracy.sort(
+        key=lambda item: recent_topic_id_order.index(item['topic'].id)
+        if item['topic'].id in recent_topic_id_order else float('inf')
     )
-
-    overall_completion = round((unique_correct_questions / total_available_questions) * 100, 1) if total_available_questions else 0
-    overall_accuracy = avg_score  # Reuse from above
 
     return render(request, 'mcq/quiz_history.html', {
         'attempts': attempts,
@@ -365,6 +350,7 @@ def quiz_history(request):
         'overall_completion': overall_completion,
         'overall_accuracy': overall_accuracy,
     })
+
 
 
 
