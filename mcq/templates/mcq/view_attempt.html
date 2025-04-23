@@ -79,6 +79,17 @@
   </div>
 {% endfor %}
 
+<!-- Fixed Bottom Bar -->
+<div class="fixed-bottom bg-white border-top shadow-sm py-2 px-3 d-flex justify-end justify-content-center justify-content-md-end gap-3">
+  <a href="{% url 'quiz_history' %}" class="btn btn-primary btn-lg">
+    My Quizzes
+  </a>
+  <a href="{{ quiz_url }}" class="btn btn-primary btn-lg">
+    Try Similar Quiz
+  </a>
+</div>
+
+
 {% if user.is_superuser %}
 <script>
   document.addEventListener("DOMContentLoaded", () => {

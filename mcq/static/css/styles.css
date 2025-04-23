@@ -580,3 +580,68 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
     max-width: 400px;
   }
 }
+
+.topic-link {
+  font-weight: 600;
+  color: #004080;
+}
+
+.topic-link:hover {
+  text-decoration: underline;
+}
+
+.progress + .progress {
+  margin-top: 1rem; /* extra spacing between bars if stacked */
+}
+
+.topic-link,
+.subtopic-link {
+  color: #212529; /* Dark gray for better contrast */
+  font-weight: 600;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s ease-in-out;
+}
+
+.topic-link::after,
+.subtopic-link::after {
+  content: " »";
+  font-weight: normal;
+  color: #999;
+}
+
+.topic-link:hover,
+.subtopic-link:hover {
+  text-decoration: underline;
+  color: #0d6efd;
+}
+
+.topic-link:focus,
+.subtopic-link:focus {
+  outline: 2px dashed #0d6efd;
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  #calculator-container {
+    position: fixed;
+    left: 50%;
+    bottom: 90px;
+    transform: translateX(-50%);
+    z-index: 1050;
+    background-color: white;
+
+    border: 2px solid black; /* ✳️ Strong black border */
+    border-radius: 10px;
+
+    padding: 15px;
+
+    /* ✳️ Enhanced drop shadow for better visibility */
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+
+    width: 95%;
+    max-width: 400px;
+  }
+}
+
+

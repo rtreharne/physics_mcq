@@ -58,84 +58,98 @@
   <thead>
     <tr>
       <th>Topic</th>
-      <th>Progress</th>
     </tr>
   </thead>
   <tbody>
     {% for item in topic_accuracy %}
-      <!-- Clickable Topic Row -->
-      <tr class="topic-row 
+    <tr class="topic-row 
         {% if item.accuracy < 51 %}table-danger
         {% elif item.accuracy < 80 %}table-warning
         {% else %}table-success
-        {% endif %}" 
-        data-bs-toggle="collapse" 
-        data-bs-target="#subtopics-{{ forloop.counter }}" 
-        style="cursor: pointer;">
-        <td>{{ item.topic.name }}</td>
-        <td>
-          <!-- Accuracy Section -->
-          <div class="mb-2">
-            <small class="fw-semibold text-muted">Accuracy: {{ item.correct }}/{{ item.total }} </small>
-            <div class="progress" style="height: 20px;">
-              <div class="progress-bar 
+        {% endif %}">
+      <td colspan="2" class="py-4 px-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <strong class="fs-5">
+            <a href="{% url 'quiz' %}?subtopics_list={% for sub in item.subtopics %}{{ sub.subtopic.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+              class="topic-link">
+              {{ item.topic.name }}
+            </a>
+          </strong>
+          <button class="btn btn-sm btn-outline-secondary"
+            data-bs-toggle="collapse"
+            data-bs-target="#subtopics-{{ forloop.counter }}"
+            aria-expanded="false"
+            aria-controls="subtopics-{{ forloop.counter }}">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+        </div>
+
+        <!-- Accuracy -->
+        <div class="mb-4">
+          <small class="fw-semibold text-muted">Accuracy: {{ item.correct }}/{{ item.total }}</small>
+          <div class="progress mt-1" style="height: 20px;">
+            <div class="progress-bar 
                 {% if item.accuracy < 51 %}bg-danger
                 {% elif item.accuracy < 80 %}bg-warning text-dark
                 {% else %}bg-success
                 {% endif %}" 
                 style="width: {{ item.accuracy }}%;">
-                {{ item.accuracy }}%
-              </div>
+              {{ item.accuracy }}%
             </div>
           </div>
-        
-          <!-- Completed Section -->
-          <div>
-            <small class="fw-semibold text-muted">Completed: {{ item.completed }}/{{ item.total_available }}</small>
-            <div class="progress" style="height: 20px;">
-              <div class="progress-bar" 
-                   style="width: {{ item.completion_rate }}%;" 
-                   title="Completed: {{ item.completed }} of {{ item.total_available }}">
-                   {{ item.completion_rate }}%
-              </div>
-            </div>
-          </div>
-        </td>
-        
-      </tr>
+        </div>
 
-      <!-- Collapsible Subtopic Row -->
-      <tr class="collapse" id="subtopics-{{ forloop.counter }}">
-        <td colspan="2" class="bg-light">
-          {% if item.subtopics %}
-          <ul class="list-unstyled mb-0 ps-2 py-2" style="margin-left: 5%; margin-right: 5%";>
-            {% for sub in item.subtopics %}
-              <li class="mb-2 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
-                <div>
-                  <strong>{{ sub.subtopic.name }}</strong>
-                  <span class="text-muted small ms-md-2 d-block d-md-inline">
-                    {{ sub.correct }}/{{ sub.total }} correct
-                  </span>
-                </div>
-                <span class="badge mt-1 mt-md-0
-                  {% if sub.accuracy < 51 %}bg-danger
-                  {% elif sub.accuracy < 80 %}bg-warning text-dark
-                  {% else %}bg-success
-                  {% endif %}">
-                  {{ sub.accuracy }}%
-                </span>
-              </li>
-            {% endfor %}
-          </ul>
-          
-          {% else %}
-            <p class="text-muted mb-0 p-2">No subtopic data</p>
-          {% endif %}
-        </td>
-      </tr>
+        <!-- Completion -->
+        <div>
+          <small class="fw-semibold text-muted">Completed: {{ item.completed }}/{{ item.total_available }}</small>
+          <div class="progress mt-1" style="height: 20px;">
+            <div class="progress-bar bg-info text-dark"
+              style="width: {{ item.completion_rate }}%;"
+              title="Completed: {{ item.completed }} of {{ item.total_available }}">
+              {{ item.completion_rate }}%
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Collapsible Subtopic Row -->
+    <tr class="collapse" id="subtopics-{{ forloop.counter }}">
+      <td colspan="2" class="bg-light">
+        {% if item.subtopics %}
+        <ul class="list-unstyled mb-0 ps-2 py-2" style="margin-left: 5%; margin-right: 5%;">
+          {% for sub in item.subtopics %}
+          <li class="mb-2 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
+            <div>
+              <strong>
+                <a href="{% url 'quiz' %}?subtopics_list={{ sub.subtopic.id }}"
+                  class="subtopic-link">
+                  {{ sub.subtopic.name }}
+                </a>
+              </strong>
+              <span class="text-muted small ms-md-2 d-block d-md-inline">
+                {{ sub.correct }}/{{ sub.total }} correct
+              </span>
+            </div>
+            <span class="badge mt-1 mt-md-0
+              {% if sub.accuracy < 51 %}bg-danger
+              {% elif sub.accuracy < 80 %}bg-warning text-dark
+              {% else %}bg-success
+              {% endif %}">
+              {{ sub.accuracy }}%
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0 p-2">No subtopic data</p>
+        {% endif %}
+      </td>
+    </tr>
     {% endfor %}
   </tbody>
 </table>
+
 
 <div class="mb-3 d-flex flex-wrap gap-3">
   <div><span class="badge bg-success">80%+</span> <span class="text-muted">Strong</span></div>

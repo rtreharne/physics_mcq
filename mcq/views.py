@@ -353,6 +353,9 @@ def quiz_history(request):
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 
+from django.urls import reverse
+from django.db.models import Prefetch
+
 def view_attempt(request, attempt_id):
     attempt = get_object_or_404(QuizAttempt, id=attempt_id)
 
@@ -361,13 +364,20 @@ def view_attempt(request, attempt_id):
         if not request.user.is_authenticated or request.user != attempt.user:
             return HttpResponseForbidden("You are not allowed to view this attempt.")
 
-    # Anonymous attempts are public
-    responses = QuizResponse.objects.select_related('question').filter(attempt=attempt)
+    # Get responses and prefetch related question and subtopic
+    responses = QuizResponse.objects.select_related('question__subtopic').filter(attempt=attempt)
+
+    # Build subtopic list for regenerating the quiz
+    subtopic_ids = responses.values_list('question__subtopic__id', flat=True).distinct()
+    subtopic_list = ",".join(map(str, sorted(subtopic_ids)))
+    quiz_url = f"{reverse('quiz')}?subtopics_list={subtopic_list}"
 
     return render(request, 'mcq/view_attempt.html', {
         'attempt': attempt,
-        'responses': responses
+        'responses': responses,
+        'quiz_url': quiz_url,
     })
+
 
 from django.db.models import Q
 
