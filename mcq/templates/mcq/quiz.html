@@ -169,6 +169,10 @@
   </div>
   
   <div class="d-flex gap-2 align-items-center">
+    <i id="share-btn" class="bi bi-share text-dark ms-3" style="cursor: pointer;" title="Share this quiz"></i>
+
+    
+    
     <button id="toggle-calculator-btn" class="ms-2 btn-light border calculator-toggle" onclick="toggleCalculator()">
       <i class="bi bi-calculator"></i>
     </button>
@@ -210,6 +214,11 @@
     </div>
   </div>
 </div>
+
+<div id="copy-toast" class="position-fixed bottom-0 end-0 m-3 p-2 px-3 rounded shadow text-white bg-success d-none" style="z-index: 9999;">
+  <i class="bi bi-check-circle me-2"></i>Quiz Link copied!
+</div>
+
 
 <!-- Scripts -->
 <script src="{% static 'js/quiz.js' %}"></script>

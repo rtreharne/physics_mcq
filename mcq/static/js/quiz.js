@@ -178,3 +178,36 @@ document.addEventListener("DOMContentLoaded", function () {
   showQuestion(current);
   quizStartTime = new Date();
 });
+
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const shareUrl = window.location.href;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: document.title,
+        url: shareUrl
+      });
+    } catch (err) {
+      console.warn('Sharing cancelled or failed:', err);
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showCopyToast();
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+});
+
+function showCopyToast() {
+  const toast = document.getElementById('copy-toast');
+  toast.classList.remove('d-none');
+  toast.classList.add('fade', 'show');
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.add('d-none');
+  }, 2000);
+}
