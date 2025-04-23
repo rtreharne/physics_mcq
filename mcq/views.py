@@ -1,34 +1,32 @@
+import json
 import random
-from django.shortcuts import render
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.utils.timezone import now
-from django.db.models import Sum
-import json
-from .models import QuizAttempt, QuizResponse, Question, Keyword, Topic
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from weasyprint import HTML
-from django.shortcuts import redirect
-from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
-from .models import QuizAttempt, QuizResponse, Question, Keyword, Profile
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from django.contrib.auth import get_user_model
-from datetime import datetime, timedelta
-from django.db.models import Sum, Avg, Count, F, Max
-from django.contrib.admin.views.decorators import staff_member_required
+import uuid
 from collections import defaultdict
-from django.db.models import Exists, OuterRef, Subquery, BooleanField, ExpressionWrapper, Q
+from datetime import datetime, timedelta
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.db.models import (
+    Avg, BooleanField, Count, Exists, ExpressionWrapper, F, Max,
+    OuterRef, Q, Subquery, Sum
+)
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.http import require_POST
 
+from weasyprint import HTML
 
+from .forms import QuantaCreateForm
+from .models import (
+    Keyword, Profile, Question, QuizAttempt, QuizResponse,
+    Quanta, QuantaMembership, Topic
+)
 
 
 @require_POST
@@ -429,3 +427,79 @@ def keyword_quiz(request):
         'is_authenticated': request.user.is_authenticated,
     })
 
+@login_required
+def create_quanta(request):
+    if request.method == 'POST':
+        form = QuantaCreateForm(request.POST)
+        if form.is_valid():
+            quanta = form.save(commit=False)
+            quanta.creator = request.user.profile
+            quanta.invite_code = uuid.uuid4().hex[:8]  # Generate unique 8-char code
+            quanta.save()
+
+            # Add creator as first member
+            QuantaMembership.objects.create(quanta=quanta, profile=request.user.profile)
+
+            return redirect('quanta_dashboard')
+    else:
+        form = QuantaCreateForm()
+    
+    return render(request, 'mcq/create_quanta.html', {'form': form})
+
+@login_required
+def quanta_dashboard(request):
+    profile = request.user.profile
+    created_quanta = Quanta.objects.filter(creator=profile)
+    member_quanta = Quanta.objects.filter(memberships__profile=profile).exclude(creator=profile)
+
+    return render(request, 'mcq/quanta_dashboard.html', {
+        'created_quanta': created_quanta,
+        'member_quanta': member_quanta,
+    })
+
+@login_required
+def view_quanta(request, quanta_id):
+    quanta = get_object_or_404(Quanta, id=quanta_id)
+    profile = request.user.profile
+
+    # Ensure the user is a member
+    if not QuantaMembership.objects.filter(profile=profile, quanta=quanta).exists():
+        return HttpResponseForbidden("You are not a member of this Quanta.")
+
+    # Get members depending on visibility
+    memberships = QuantaMembership.objects.filter(quanta=quanta).select_related('profile__user')
+
+    if quanta.visibility == 'creator_only' and quanta.creator != profile:
+        show_names = False
+    elif quanta.visibility == 'anonymous':
+        show_names = False
+    else:
+        show_names = True
+
+    return render(request, 'mcq/view_quanta.html', {
+        'quanta': quanta,
+        'memberships': memberships,
+        'show_names': show_names,
+        'is_creator': quanta.creator == profile,
+    })
+
+from django.shortcuts import redirect
+from django.contrib import messages
+
+@login_required
+def join_quanta(request, invite_code):
+    profile = request.user.profile
+    try:
+        quanta = Quanta.objects.get(invite_code=invite_code)
+    except Quanta.DoesNotExist:
+        messages.error(request, "Quanta not found.")
+        return redirect('quanta_dashboard')
+
+    # Avoid duplicate membership
+    if not QuantaMembership.objects.filter(profile=profile, quanta=quanta).exists():
+        QuantaMembership.objects.create(profile=profile, quanta=quanta)
+        messages.success(request, f"You joined the Quanta: {quanta.name}")
+    else:
+        messages.info(request, "You are already a member of this Quanta.")
+
+    return redirect('view_quanta', quanta_id=quanta.id)

@@ -13,6 +13,13 @@ urlpatterns = [
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
     path("privacy/", TemplateView.as_view(template_name="mcq/privacy.html"), name="privacy_policy"),
     path("flag-question/", views.flag_question, name="flag_question"),
+    path('quanta/create/', views.create_quanta, name='create_quanta'),
+    path('quanta/', views.quanta_dashboard, name='quanta_dashboard'),
+    path('quanta/<int:quanta_id>/', views.view_quanta, name='view_quanta'),
+    path('quanta/join/<str:invite_code>/', views.join_quanta, name='join_quanta'),
+
+
+
 
 
 

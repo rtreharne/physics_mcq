@@ -1,0 +1,33 @@
+{% extends 'mcq/base.html' %}
+{% block title %}{{ quanta.name }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">{{ quanta.name }}</h2>
+
+<p>
+  <strong>Invite Link:</strong>
+  <code>{{ request.build_absolute_uri|cut:request.get_full_path }}{% url 'join_quanta' invite_code=quanta.invite_code %}
+</code>
+</p>
+
+<p><strong>Visibility:</strong>
+  {% if quanta.visibility == 'creator_only' %} Only visible to you (creator)
+  {% elif quanta.visibility == 'members_visible' %} Visible to all members
+  {% else %} Anonymous
+  {% endif %}
+</p>
+
+<h4 class="mt-4">Members ({{ memberships.count }})</h4>
+<ul class="list-group">
+  {% for member in memberships %}
+    <li class="list-group-item">
+      {% if show_names or is_creator %}
+        {{ member.profile.user.get_full_name|default:member.profile.anonymous_name }}
+      {% else %}
+        {{ member.profile.anonymous_name }}
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

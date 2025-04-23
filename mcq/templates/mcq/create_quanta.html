@@ -1,0 +1,48 @@
+{% extends "mcq/base.html" %}
+{% block title %}Create a Quanta{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <h2 class="mb-3">Create a Quanta</h2>
+
+  <div class="alert alert-info">
+    <strong>What is a Quanta?</strong><br>
+    A <em>Quanta</em> is a shared quiz group where students can join via a unique link. 
+    It helps learners stay motivated and makes it easy for teachers to monitor progress. 
+    Choose whether you want visibility of member names or keep everything anonymous — it’s up to you!
+  </div>
+
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    
+    <div class="mb-3">
+      <label for="{{ form.name.id_for_label }}" class="form-label">Quanta Name</label>
+      {{ form.name }}
+      {% for error in form.name.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.visibility.id_for_label }}" class="form-label">Visibility</label>
+      {{ form.visibility }}
+      <div class="form-text">
+        Decide who can see member names in this Quanta:
+        <ul class="mb-0">
+          <li><strong>Creator Only</strong>: Only you can see member names</li>
+          <li><strong>All Members</strong>: Everyone can see who’s in</li>
+          <li><strong>Anonymous</strong>: No one sees anyone — it's just quiz scores</li>
+        </ul>
+      </div>
+      {% for error in form.visibility.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Quanta</button>
+  </form>
+
+</div>
+{% endblock %}

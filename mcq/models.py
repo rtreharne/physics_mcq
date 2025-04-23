@@ -3,7 +3,14 @@ from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.shortcuts import render
 from datetime import timedelta
+import string, random
 
+def generate_unique_invite_code():
+    chars = string.ascii_letters + string.digits
+    while True:
+        code = ''.join(random.choices(chars, k=10))
+        if not Quanta.objects.filter(invite_code=code).exists():
+            return code
 
 
 class Profile(models.Model):
@@ -106,3 +113,34 @@ class QuizResponse(models.Model):
 
     def __str__(self):
         return f"Q{self.question.id} - {'✔' if self.correct else '✘'}"
+
+class Quanta(models.Model):
+    name = models.CharField(max_length=100)
+    creator = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='created_quanta')
+    visibility = models.CharField(max_length=20, choices=[
+        ('creator_only', 'Only Creator Can See Names'),
+        ('all_members', 'All Members Can See Names'),
+        ('anonymous', 'All Anonymous'),
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    invite_code = models.CharField(max_length=12, unique=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invite_code:
+            self.invite_code = generate_unique_invite_code()
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return self.name
+
+class QuantaMembership(models.Model):
+    quanta = models.ForeignKey(Quanta, on_delete=models.CASCADE, related_name='memberships')
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='quanta_memberships')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('quanta', 'profile')  # prevent duplicates
+
+    def __str__(self):
+        return f"{self.profile} in {self.quanta.name}"

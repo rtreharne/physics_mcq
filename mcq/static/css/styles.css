@@ -649,5 +649,8 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
   cursor: pointer;
 }
 
+.list-group a:hover .list-group-item {
+  background-color: #f8f9fa;
+}
 
 

@@ -1,0 +1,96 @@
+{% extends "mcq/base.html" %}
+
+{% block title %}My Quanta{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-2 rounded shadow-sm p-4 mb-5">
+    <h2 class="mb-3 text-primary fw-bold">What are Quanta?</h2>
+    <p class="lead">
+      A <strong>Quantum</strong> (plural: <strong>Quanta</strong>) is a collaborative learning group that lets students and teachers
+      share quizzes and track progress together in real time.
+    </p>
+    <div class="row">
+      <div class="col-md-6">
+        <h5 class="text-dark">👩‍🏫 For Teachers</h5>
+        <ul class="mb-3">
+          <li>Monitor student progress with leaderboards</li>
+          <li>Spot struggling learners via chain stats and accuracy</li>
+          <li>Use visibility settings to keep things anonymous or open</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h5 class="text-dark">📚 For Students</h5>
+        <ul class="mb-3">
+          <li>Revise together in shared quiz groups</li>
+          <li>Compete for streaks, points, and ranks</li>
+          <li>Join via a unique invite code or link</li>
+        </ul>
+      </div>
+    </div>
+    <p class="mb-0"><strong>Get started by creating or joining a Quanta today!</strong></p>
+  </div>
+  
+
+{% if created_quanta %}
+  <h4>Quanta You Created</h4>
+  <ul class="list-group mb-4">
+    {% for quanta in created_quanta %}
+      <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ quanta.name }}</strong><br>
+            <small class="text-muted">
+              {% if quanta.visibility == "creator_only" %}👁️ Only you see names
+              {% elif quanta.visibility == "all_members" %}🧑‍🤝‍🧑 Members see names
+              {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
+              {% endif %}
+              · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
+            </small>
+          </div>
+          <span class="badge bg-primary">Code: {{ quanta.invite_code }}</span>
+        </li>
+      </a>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if member_quanta %}
+  <h4>Quanta You Joined</h4>
+  <ul class="list-group mb-4">
+    {% for quanta in member_quanta %}
+      <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ quanta.name }}</strong><br>
+            <small class="text-muted">
+              {% if quanta.visibility == "creator" %}👁️ Only creator sees names
+              {% elif quanta.visibility == "members" %}🧑‍🤝‍🧑 Members see names
+              {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
+              {% endif %}
+              · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
+            </small>
+          </div>
+          <span class="text-muted small">Created by: {{ quanta.created_by.anonymous_name }}</span>
+        </li>
+      </a>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if not created_quanta and not member_quanta %}
+  <p class="text-muted">You haven’t joined or created any Quanta yet.</p>
+{% endif %}
+
+<!-- Bottom Bar -->
+<div class="bottom-bar-container">
+  <div class="bottom-bar-content">
+    <a href="{% url 'create_quanta' %}" class="btn btn-primary btn-lg">
+        Join a Quantum
+      </a>
+    <a href="{% url 'create_quanta' %}" class="btn btn-primary btn-lg">
+      Create a New Quantum
+    </a>
+  </div>
+</div>
+
+{% endblock %}

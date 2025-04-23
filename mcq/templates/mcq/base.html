@@ -58,7 +58,7 @@
         <div class="ms-auto w-100">
           {% if user.is_authenticated %}
             <div class="d-flex flex-column flex-lg-row align-items-center align-items-lg-center justify-content-lg-end gap-2 gap-lg-3 text-center text-lg-end py-2 py-lg-0">
-  
+
               <span class="text-white">
                 👤 {{ user.profile.anonymous_name }}
               </span>
@@ -66,14 +66,21 @@
               <span class="text-white">
                 🔗 Chain: {{ user.profile.chain_length }} days
               </span>
-  
+              
               <a href="{% url 'quiz_history' %}" class="btn btn-outline-light">
                 My Quizzes
               </a>
   
               <a href="{% url 'leaderboard' %}" class="btn btn-outline-light">
-                Leaderboard
+                Leaderboards
               </a>
+
+              
+              <!-- <a class="btn btn-primary text-white" href="{% url 'quanta_dashboard' %}">
+                Quanta
+              </a> -->
+              
+              
   
               <a href="{% url 'account_logout' %}" class="btn btn-outline-warning">
                 Log out
