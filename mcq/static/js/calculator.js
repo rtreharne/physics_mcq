@@ -120,34 +120,31 @@ function calculateResult() {
       .replace(/÷/g, '/')
       .replace(/Ans/g, previousAnswer || '0');
 
-    // Handle ×10^X as scientific notation
-    expression = expression.replace(/(\d+(?:\.\d+)?)\*10\^(-?\d+)/g, (_, base, exp) => {
-      return `(${base} * Math.pow(10, ${exp}))`;
-    });
-
-    // Trig conversions
+    // Replace constants
     expression = expression
-    .replace(/×/g, '*')
-    .replace(/÷/g, '/')
-    .replace(/Ans/g, previousAnswer || '0')
-    .replace(/sin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
-    .replace(/cos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
-    .replace(/tan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
-    .replace(/asin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180 / Math.PI)` : `Math.asin(${val})`)
-    .replace(/acos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180 / Math.PI)` : `Math.acos(${val})`)
-    .replace(/atan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180 / Math.PI)` : `Math.atan(${val})`)
-    .replace(/log\(/g, 'Math.log10(')
-    .replace(/ln\(/g, 'Math.log(')
-    .replace(/exp\(/g, 'Math.exp(')
-    .replace(/√\(/g, 'Math.sqrt(')
-    .replace(/π/g, 'Math.PI')
-    .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E') // Euler's number only, not part of scientific notation
-    // Replace x^2 (any number) and general x^y syntax
-    .replace(/([0-9.]+|\([^()]+\))\^2/g, (_, base) => `Math.pow(${base}, 2)`)
-    .replace(/([0-9.]+|\([^()]+\))\^(-?[0-9.]+)/g, (_, base, exp) => `Math.pow(${base}, ${exp})`)
+      .replace(/π/g, 'Math.PI')
+      .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E'); // Euler's number only
 
-    // .replace(/(?<![eE])10\^(-?\d+)/g, 'Math.pow(10, $1)');
+    // ✅ Replace ALL ^ operators right-to-left using recursive replacement
+    const powerRegex = /(\([^()]*\)|[\d.eE+-]+)\^(\([^()]*\)|[\d.eE+-]+)/;
+    while (powerRegex.test(expression)) {
+      expression = expression.replace(powerRegex, (_, base, exp) => {
+        return `Math.pow(${base}, ${exp})`;
+      });
+    }
 
+    // Trig and functions
+    expression = expression
+      .replace(/√\(/g, 'Math.sqrt(')
+      .replace(/log\(/g, 'Math.log10(')
+      .replace(/ln\(/g, 'Math.log(')
+      .replace(/exp\(/g, 'Math.exp(')
+      .replace(/sin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
+      .replace(/cos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
+      .replace(/tan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
+      .replace(/asin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180 / Math.PI)` : `Math.asin(${val})`)
+      .replace(/acos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180 / Math.PI)` : `Math.acos(${val})`)
+      .replace(/atan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180 / Math.PI)` : `Math.atan(${val})`);
 
     console.log("Evaluating:", expression);
     const result = eval(expression);
@@ -161,6 +158,8 @@ function calculateResult() {
     display.value = 'Error';
   }
 }
+
+
 
   
 
