@@ -21,11 +21,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Sum, Avg, Count, F
 from django.contrib.admin.views.decorators import staff_member_required
 from collections import defaultdict
 from django.db.models import Exists, OuterRef, Subquery, BooleanField, ExpressionWrapper, Q
+from django.utils import timezone
+
 
 
 
@@ -149,9 +151,7 @@ def result(request):
 
 
 
-@require_POST
 @csrf_protect
-#@login_required  # remove this line if anonymous attempts are allowed
 @require_POST
 def save_quiz(request):
     data = json.loads(request.body)
@@ -173,7 +173,26 @@ def save_quiz(request):
             correct=r['correct']
         )
 
+    # Update chain length using explicit Profile lookup
+    if user and user.is_authenticated:
+        try:
+            profile = Profile.objects.get(user=user)
+            today = timezone.now().date()
+            yesterday = today - timedelta(days=1)
+
+            if profile.last_chain_date == yesterday:
+                profile.chain_length = (profile.chain_length or 0) + 1
+            else:
+                profile.chain_length = 1
+
+            profile.last_chain_date = today
+            profile.save()
+
+        except Profile.DoesNotExist:
+            pass  # Optional: create a profile or log an error
+
     return JsonResponse({'success': True, 'attempt_id': attempt.id})
+
 
 
 
