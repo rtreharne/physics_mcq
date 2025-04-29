@@ -45,16 +45,10 @@ function insertToDisplay(value) {
     h_const: '6.626e-34'
   };
 
-  const inverseTrig = {
-    'asin(': 'Math.asin(',
-    'acos(': 'Math.acos(',
-    'atan(': 'Math.atan('
-  };
+  
 
   if (constants[value]) {
     display.value += constants[value];
-  } else if (inverseTrig[value]) {
-    display.value += inverseTrig[value];
   } else if (value === '×10^') {
     display.value += '*10^';
   } else {
@@ -116,41 +110,60 @@ function calculateResult() {
   const display = document.getElementById('calc-display');
   try {
     let expression = display.value
+      // Step 1: Replace inverse trig first (sin⁻¹ → asin)
+      .replace(/sin⁻¹\(/g, 'asin(')
+      .replace(/cos⁻¹\(/g, 'acos(')
+      .replace(/tan⁻¹\(/g, 'atan(')
+
+      // Step 2: Clean Unicode (superscript minus and one)
+      .replace(/\u207B/g, '-')  
+      .replace(/\u00B9/g, '')  
+
+      // Step 3: Replace powers safely
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
-      .replace(/Ans/g, previousAnswer || '0');
-
-    // Replace constants
-    expression = expression
+      .replace(/Ans/g, previousAnswer || '0')
       .replace(/π/g, 'Math.PI')
-      .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E'); // Euler's number only
+      .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E');
 
-    // ✅ Replace ALL ^ operators right-to-left using recursive replacement
+    // Step 4: Handle powers (e.g., 2^3)
     const powerRegex = /(\([^()]*\)|[\d.eE+-]+)\^(\([^()]*\)|[\d.eE+-]+)/;
     while (powerRegex.test(expression)) {
       expression = expression.replace(powerRegex, (_, base, exp) => {
-        return `Math.pow(${base}, ${exp})`;
+        return `(Math.pow(${base}, ${exp}))`;
       });
+      
     }
 
-    // Trig and functions
+
+    // Step 5: Trigonometric functions
     expression = expression
-      .replace(/√\(/g, 'Math.sqrt(')
-      .replace(/log\(/g, 'Math.log10(')
-      .replace(/ln\(/g, 'Math.log(')
-      .replace(/exp\(/g, 'Math.exp(')
-      .replace(/sin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
-      .replace(/cos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
-      .replace(/tan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
-      .replace(/asin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180 / Math.PI)` : `Math.asin(${val})`)
-      .replace(/acos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180 / Math.PI)` : `Math.acos(${val})`)
-      .replace(/atan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180 / Math.PI)` : `Math.atan(${val})`);
+    // NORMAL trig functions
+    .replace(/\bsin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
+    .replace(/\bcos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
+    .replace(/\btan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
+
+    // INVERSE trig functions: asin, acos, atan
+    .replace(/\basin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180/Math.PI)` : `Math.asin(${val})`)
+    .replace(/\bacos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180/Math.PI)` : `Math.acos(${val})`)
+    .replace(/\batan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180/Math.PI)` : `Math.atan(${val})`)
+
+    // Other math functions
+    .replace(/√\(/g, 'Math.sqrt(')
+    .replace(/log\(/g, 'Math.log10(')
+    .replace(/ln\(/g, 'Math.log(')
+    .replace(/exp\(/g, 'Math.exp(');
+
+
 
     console.log("Evaluating:", expression);
+
     const result = eval(expression);
+
     previousAnswer = result;
 
-    display.value = (Math.abs(result) > 1000 || (Math.abs(result) < 0.01 && result !== 0))
+    // Nice formatting of results
+    display.value = (Math.abs(result) > 1000 || (Math.abs(result) < 0.001 && result !== 0))
       ? result.toExponential(6)
       : parseFloat(result.toFixed(8));
   } catch (err) {
@@ -158,6 +171,7 @@ function calculateResult() {
     display.value = 'Error';
   }
 }
+
 
 
 
