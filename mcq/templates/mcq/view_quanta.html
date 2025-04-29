@@ -12,20 +12,25 @@
 
 <p><strong>Visibility:</strong>
   {% if quanta.visibility == 'creator_only' %} Only visible to you (creator)
-  {% elif quanta.visibility == 'members_visible' %} Visible to all members
+  {% elif quanta.visibility == 'all_members' %} Visible to all members
   {% else %} Anonymous
   {% endif %}
 </p>
 
-<h4 class="mt-4">Members ({{ memberships.count }})</h4>
+<h4 class="mt-4">Members ({{ member_data|length }})</h4>
 <ul class="list-group">
-  {% for member in memberships %}
-    <li class="list-group-item">
-      {% if show_names or is_creator %}
-        {{ member.profile.user.get_full_name|default:member.profile.anonymous_name }}
-      {% else %}
-        {{ member.profile.anonymous_name }}
-      {% endif %}
+  {% for member in member_data %}
+    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+      <div>
+        <strong>{{ member.name }}</strong><br>
+        <small class="text-muted">
+          {% if member.accuracy is not None %}🧠 Accuracy: {{ member.accuracy }}% · {% endif %}
+          📈 Completion: {{ member.completion }}% ·
+          ⭐ Points: {{ member.points }} · 
+          🔗 Chain: {{ member.chain_length }} · 
+          🕓 Last Quiz: {{ member.last_quiz|date:"M j, H:i" }}
+        </small>
+      </div>
     </li>
   {% endfor %}
 </ul>

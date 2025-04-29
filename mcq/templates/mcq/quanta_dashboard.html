@@ -34,7 +34,7 @@
 {% if created_quanta %}
   <h4>Quanta You Created</h4>
   <ul class="list-group mb-4">
-    {% for quanta in created_quanta %}
+    {% for quanta, accuracy in created_quanta %}
       <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
@@ -45,6 +45,7 @@
               {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
               {% endif %}
               · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
+              {% if accuracy is not None %} · 🧠 Accuracy: {{ accuracy }}%{% endif %}
             </small>
           </div>
           <span class="badge bg-primary">Code: {{ quanta.invite_code }}</span>
@@ -63,14 +64,19 @@
           <div>
             <strong>{{ quanta.name }}</strong><br>
             <small class="text-muted">
-              {% if quanta.visibility == "creator" %}👁️ Only creator sees names
-              {% elif quanta.visibility == "members" %}🧑‍🤝‍🧑 Members see names
+              {% if quanta.visibility == "creator_only" %}👁️ Only creator sees names
+              {% elif quanta.visibility == "all_members" %}🧑‍🤝‍🧑 Members see names
               {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
               {% endif %}
               · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
             </small>
           </div>
-          <span class="text-muted small">Created by: {{ quanta.created_by.anonymous_name }}</span>
+          <span class="text-muted small">Created by: 
+            {% if quanta.visibility == "anonymous" %}{{ quanta.creator.anonymous_name }}
+            {% else %}
+              {{ quanta.creator.user.get_full_name|default:quanta.creator.anonymous_name }}
+            {% endif %}
+          </span>
         </li>
       </a>
     {% endfor %}
@@ -84,13 +90,57 @@
 <!-- Bottom Bar -->
 <div class="bottom-bar-container">
   <div class="bottom-bar-content">
-    <a href="{% url 'create_quanta' %}" class="btn btn-primary btn-lg">
-        Join a Quantum
-      </a>
+    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#joinQuantumModal">
+      Join a Quantum
+    </button>
     <a href="{% url 'create_quanta' %}" class="btn btn-primary btn-lg">
       Create a New Quantum
     </a>
   </div>
 </div>
+
+<!-- Join Quantum Modal -->
+<div class="modal fade" id="joinQuantumModal" tabindex="-1" aria-labelledby="joinQuantumModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="joinQuantumModalLabel">Join a Quantum</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="joinQuantumError" class="alert alert-danger d-none" role="alert">
+          Invalid join code. Please try again.
+        </div>
+        <label for="invite_code" class="form-label">Enter Join Code:</label>
+        <input type="text" class="form-control" id="invite_code" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="submitJoinCode()">Join</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function submitJoinCode() {
+    const code = document.getElementById('invite_code').value.trim();
+    if (code) {
+      window.location.href = `/quanta/join/${encodeURIComponent(code)}/`;
+    }
+  }
+
+  // Show modal with error if URL contains ?error=1
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === '1') {
+      const errorDiv = document.getElementById('joinQuantumError');
+      errorDiv.classList.remove('d-none');
+
+      const joinModal = new bootstrap.Modal(document.getElementById('joinQuantumModal'));
+      joinModal.show();
+    }
+  });
+</script>
+
 
 {% endblock %}

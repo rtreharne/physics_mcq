@@ -6,10 +6,9 @@ function toggleCalculator() {
 
   if (calculator.style.display === 'block') {
     calculator.style.display = 'none';
-    return; // exit early if it was already shown
+    return;
   }
 
-  // Otherwise show and position it
   const existingWrapper = document.getElementById('calculator-wrapper');
   if (existingWrapper) existingWrapper.remove();
 
@@ -25,13 +24,12 @@ function toggleCalculator() {
   } else {
     wrapper.style.textAlign = 'center';
     wrapper.style.marginTop = '20px';
-    wrapper.style.paddingBottom = '80px'; // for fixed bottom bar
+    wrapper.style.paddingBottom = '80px';
     currentQuestion.appendChild(wrapper);
   }
 
   wrapper.appendChild(calculator);
 }
-
 
 function insertToDisplay(value) {
   const display = document.getElementById('calc-display');
@@ -40,17 +38,15 @@ function insertToDisplay(value) {
   }
 
   const constants = {
-    e_const: '1.602e-19',
+    e_const: 'Math.E',
     c_const: '3.00e8',
     h_const: '6.626e-34'
   };
 
-  
-
   if (constants[value]) {
     display.value += constants[value];
   } else if (value === '×10^') {
-    display.value += '*10^';
+    display.value += '×10^';  // Insert display-friendly symbol
   } else {
     const lastChar = display.value.slice(-1);
     const needsMultiplication = /^[a-zπe√(]/i.test(value);
@@ -61,35 +57,24 @@ function insertToDisplay(value) {
     }
   }
 
-  // ✅ Ensure the input scrolls to the right
   setTimeout(() => {
     display.scrollLeft = display.scrollWidth;
   }, 0);
 }
 
-
-
 function deleteLast() {
   const display = document.getElementById('calc-display');
   display.value = display.value === 'Error' ? '' : display.value.slice(0, -1);
-  display.scrollLeft = display.scrollWidth; // ✨ Also scroll after deleting
+  display.scrollLeft = display.scrollWidth;
 }
-
-
-  
 
 function clearDisplay() {
   document.getElementById('calc-display').value = '';
 }
 
-function deleteLast() {
-  const display = document.getElementById('calc-display');
-  display.value = display.value === 'Error' ? '' : display.value.slice(0, -1);
-}
+let previousAnswer = '';
 
-let previousAnswer = '';  // to store result for Ans
-
-let isDegrees = true;  // default mode
+let isDegrees = true;
 const modeIndicator = document.getElementById('calc-mode-indicator');
 const modeToggleBtn = document.getElementById('toggle-mode-btn');
 
@@ -100,69 +85,62 @@ if (modeToggleBtn) {
   });
 }
 
-// Helper function to wrap angles in radians if needed
 function toRadiansIfNeeded(expr) {
   return isDegrees ? `(${expr}) * Math.PI / 180` : expr;
 }
 
-// Override trig replacements in your calculateResult()
 function calculateResult() {
   const display = document.getElementById('calc-display');
   try {
     let expression = display.value
-      // Step 1: Replace inverse trig first (sin⁻¹ → asin)
+      .replace(
+        /([\d.]+)×10\^([\-+]?\d+)/g,
+        (_, coeff, exp) => `(${coeff}*(Math.pow(10,${exp})))`
+      )
+      // Inverse trig replacements first
       .replace(/sin⁻¹\(/g, 'asin(')
       .replace(/cos⁻¹\(/g, 'acos(')
       .replace(/tan⁻¹\(/g, 'atan(')
-
-      // Step 2: Clean Unicode (superscript minus and one)
-      .replace(/\u207B/g, '-')  
-      .replace(/\u00B9/g, '')  
-
-      // Step 3: Replace powers safely
+      // Clean Unicode
+      .replace(/\u207B/g, '-')
+      .replace(/\u00B9/g, '')
+      // Basic operators
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
       .replace(/Ans/g, previousAnswer || '0')
-      .replace(/π/g, 'Math.PI')
-      .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E');
+      .replace(/π/g, 'Math.PI');
 
-    // Step 4: Handle powers (e.g., 2^3)
+
+
+
+    console.log("Pre-eval expression:", expression);
+
+    // Handle normal ^ powers
     const powerRegex = /(\([^()]*\)|[\d.eE+-]+)\^(\([^()]*\)|[\d.eE+-]+)/;
     while (powerRegex.test(expression)) {
       expression = expression.replace(powerRegex, (_, base, exp) => {
         return `(Math.pow(${base}, ${exp}))`;
       });
-      
     }
 
-
-    // Step 5: Trigonometric functions
+    // Trigonometric functions
     expression = expression
-    // NORMAL trig functions
-    .replace(/\bsin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
-    .replace(/\bcos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
-    .replace(/\btan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
-
-    // INVERSE trig functions: asin, acos, atan
-    .replace(/\basin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180/Math.PI)` : `Math.asin(${val})`)
-    .replace(/\bacos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180/Math.PI)` : `Math.acos(${val})`)
-    .replace(/\batan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180/Math.PI)` : `Math.atan(${val})`)
-
-    // Other math functions
-    .replace(/√\(/g, 'Math.sqrt(')
-    .replace(/log\(/g, 'Math.log10(')
-    .replace(/ln\(/g, 'Math.log(')
-    .replace(/exp\(/g, 'Math.exp(');
-
-
+      .replace(/\bsin\(([^)]+)\)/g, (_, angle) => `Math.sin(${toRadiansIfNeeded(angle)})`)
+      .replace(/\bcos\(([^)]+)\)/g, (_, angle) => `Math.cos(${toRadiansIfNeeded(angle)})`)
+      .replace(/\btan\(([^)]+)\)/g, (_, angle) => `Math.tan(${toRadiansIfNeeded(angle)})`)
+      .replace(/\basin\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.asin(${val}) * 180/Math.PI)` : `Math.asin(${val})`)
+      .replace(/\bacos\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.acos(${val}) * 180/Math.PI)` : `Math.acos(${val})`)
+      .replace(/\batan\(([^)]+)\)/g, (_, val) => isDegrees ? `(Math.atan(${val}) * 180/Math.PI)` : `Math.atan(${val})`)
+      .replace(/√\(/g, 'Math.sqrt(')
+      .replace(/log\(/g, 'Math.log10(')
+      .replace(/ln\(/g, 'Math.log(')
+      .replace(/exp\(/g, 'Math.exp(');
 
     console.log("Evaluating:", expression);
 
     const result = eval(expression);
-
     previousAnswer = result;
 
-    // Nice formatting of results
     display.value = (Math.abs(result) > 1000 || (Math.abs(result) < 0.001 && result !== 0))
       ? result.toExponential(6)
       : parseFloat(result.toFixed(8));
@@ -171,11 +149,6 @@ function calculateResult() {
     display.value = 'Error';
   }
 }
-
-
-
-
-  
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('.calc-btn').forEach(btn => {
@@ -190,66 +163,65 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener('click', function (e) {
-    const calculator = document.getElementById('calculator-container');
-    const toggleBtn = document.getElementById('toggle-calculator-btn');
-    if (!calculator.contains(e.target) && !toggleBtn.contains(e.target)) {
-      calculator.style.display = 'none';
-      calculatorVisible = false;
-    }
-  });
+  const calculator = document.getElementById('calculator-container');
+  const toggleBtn = document.getElementById('toggle-calculator-btn');
+  if (!calculator.contains(e.target) && !toggleBtn.contains(e.target)) {
+    calculator.style.display = 'none';
+    calculatorVisible = false;
+  }
+});
 
-  document.addEventListener('keydown', function (e) {
-    const calculator = document.getElementById('calculator-container');
-    const display = document.getElementById('calc-display');
-  
-    if (calculator.style.display !== 'block') return;
-  
-    const allowedKeys = {
-      '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
-      '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-      '.': '.', '+': '+', '-': '-', '*': '*', '/': '/',
-      '(': '(', ')': ')'
-    };
-  
-    if (e.key in allowedKeys) {
-      insertToDisplay(allowedKeys[e.key]);
-      e.preventDefault();
-    } else if (e.key === 'Enter') {
-      calculateResult();
-      e.preventDefault();
-    } else if (e.key === 'Backspace') {
-      deleteLast();
-      e.preventDefault();
-    } else if (e.key === 'Escape') {
-      clearDisplay();
-      e.preventDefault();
-    } else if (e.key === 'q') {
-      insertToDisplay("1.602e-19");  // electron charge
-      e.preventDefault();
-    } else if (e.key === 'c') {
-      insertToDisplay("3.00e8");  // speed of light
-      e.preventDefault();
-    } else if (e.key === 'h') {
-      insertToDisplay("6.626e-34");  // Planck's constant
-      e.preventDefault();
-    } else if (e.key === 'p') {
-      insertToDisplay("π");
-      e.preventDefault();
-    } else if (e.key === 'k') {
-      insertToDisplay("1.381e-23");  // Boltzmann constant
-      e.preventDefault();
-    } else if (e.key === 'G') {
-      insertToDisplay("6.674e-11");  // Gravitational constant
-      e.preventDefault();
-    } else if (e.key === 'R') {
-      insertToDisplay("8.314");  // Ideal gas constant
-      e.preventDefault();
-    } else if (e.key === 'm') {
-      insertToDisplay("9.109e-31");  // Electron mass
-      e.preventDefault();
-    } else if (e.key === 'e') {
-      insertToDisplay("×10^");  // Scientific notation
-      e.preventDefault();
-    }
-  });
-  
+document.addEventListener('keydown', function (e) {
+  const calculator = document.getElementById('calculator-container');
+  const display = document.getElementById('calc-display');
+
+  if (calculator.style.display !== 'block') return;
+
+  const allowedKeys = {
+    '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
+    '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+    '.': '.', '+': '+', '-': '-', '*': '*', '/': '/',
+    '(': '(', ')': ')'
+  };
+
+  if (e.key in allowedKeys) {
+    insertToDisplay(allowedKeys[e.key]);
+    e.preventDefault();
+  } else if (e.key === 'Enter') {
+    calculateResult();
+    e.preventDefault();
+  } else if (e.key === 'Backspace') {
+    deleteLast();
+    e.preventDefault();
+  } else if (e.key === 'Escape') {
+    clearDisplay();
+    e.preventDefault();
+  } else if (e.key === 'q') {
+    insertToDisplay("Math.E"); // Electron charge or override
+    e.preventDefault();
+  } else if (e.key === 'c') {
+    insertToDisplay("3.00e8");
+    e.preventDefault();
+  } else if (e.key === 'h') {
+    insertToDisplay("6.626e-34");
+    e.preventDefault();
+  } else if (e.key === 'p') {
+    insertToDisplay("π");
+    e.preventDefault();
+  } else if (e.key === 'k') {
+    insertToDisplay("1.381e-23");
+    e.preventDefault();
+  } else if (e.key === 'G') {
+    insertToDisplay("6.674e-11");
+    e.preventDefault();
+  } else if (e.key === 'R') {
+    insertToDisplay("8.314");
+    e.preventDefault();
+  } else if (e.key === 'm') {
+    insertToDisplay("9.109e-31");
+    e.preventDefault();
+  } else if (e.key === 'e') {
+    insertToDisplay("×10^");
+    e.preventDefault();
+  }
+});

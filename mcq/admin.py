@@ -4,8 +4,22 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 import csv, io
 
-from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse, Subtopic
+from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse, Subtopic, Quanta, QuantaMembership
 from .forms import TopicCSVUploadForm
+
+
+@admin.register(Quanta)
+class QuantaAdmin(admin.ModelAdmin):
+    list_display = ('name', 'creator', 'visibility', 'invite_code', 'created_at')
+    search_fields = ('name', 'invite_code')
+    list_filter = ('visibility', 'created_at')
+
+@admin.register(QuantaMembership)
+class QuantaMembershipAdmin(admin.ModelAdmin):
+    list_display = ('quanta', 'profile', 'joined_at')
+    search_fields = ('quanta__name', 'profile__anaonymous_name')
+    list_filter = ('joined_at',)
+
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):

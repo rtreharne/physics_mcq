@@ -18,8 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 
+
+from urllib.parse import urlencode
+
 def redirect_to_google_login(request):
-    return redirect('/accounts/google/login/')
+    next_url = request.GET.get('next', '/')
+    google_login_url = '/accounts/google/login/?' + urlencode({'next': next_url})
+    return redirect(google_login_url)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

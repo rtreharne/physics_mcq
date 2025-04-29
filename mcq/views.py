@@ -27,6 +27,32 @@ from .models import (
     Keyword, Profile, Question, QuizAttempt, QuizResponse,
     Quanta, QuantaMembership, Topic
 )
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+def annotate_with_accuracy(quanta_qs):
+    quanta_with_accuracy = []
+    total_questions = Question.objects.count()
+
+    for quanta in quanta_qs:
+        # Get users in the Quanta via their profiles
+        member_profiles = QuantaMembership.objects.filter(quanta=quanta).values_list('profile', flat=True)
+        member_users = User.objects.filter(profile__in=member_profiles)
+
+        # Get all their QuizAttempts
+        attempts = QuizAttempt.objects.filter(user__in=member_users)
+
+        # Weighted average of score percentages (matches quiz_history)
+        weighted = attempts.annotate(
+            weighted_score=F('score') * 100.0 / F('total_questions')
+        ).aggregate(avg=Avg('weighted_score'))
+
+        accuracy = round(weighted['avg'], 1) if weighted['avg'] is not None else None
+
+        quanta_with_accuracy.append((quanta, accuracy))
+
+    return quanta_with_accuracy
+
 
 
 @require_POST
@@ -449,8 +475,10 @@ def create_quanta(request):
 @login_required
 def quanta_dashboard(request):
     profile = request.user.profile
-    created_quanta = Quanta.objects.filter(creator=profile)
-    member_quanta = Quanta.objects.filter(memberships__profile=profile).exclude(creator=profile)
+    created_quanta = annotate_with_accuracy(Quanta.objects.filter(creator=profile))
+    member_quanta = annotate_with_accuracy(
+        Quanta.objects.filter(memberships__profile=profile).exclude(creator=profile)
+    )
 
     return render(request, 'mcq/quanta_dashboard.html', {
         'created_quanta': created_quanta,
@@ -462,13 +490,10 @@ def view_quanta(request, quanta_id):
     quanta = get_object_or_404(Quanta, id=quanta_id)
     profile = request.user.profile
 
-    # Ensure the user is a member
     if not QuantaMembership.objects.filter(profile=profile, quanta=quanta).exists():
         return HttpResponseForbidden("You are not a member of this Quanta.")
 
-    # Get members depending on visibility
-    memberships = QuantaMembership.objects.filter(quanta=quanta).select_related('profile__user')
-
+    # Get visibility setting
     if quanta.visibility == 'creator_only' and quanta.creator != profile:
         show_names = False
     elif quanta.visibility == 'anonymous':
@@ -476,9 +501,52 @@ def view_quanta(request, quanta_id):
     else:
         show_names = True
 
+    # Get members with relevant stats
+    memberships = QuantaMembership.objects.filter(quanta=quanta).select_related('profile__user')
+    total_questions = Question.objects.count()
+
+    member_data = []
+
+    for membership in memberships:
+        p = membership.profile
+        user = p.user
+        attempts = QuizAttempt.objects.filter(user=user)
+
+        # Weighted average score (accurate)
+        accuracy_qs = attempts.annotate(
+            weighted_score=F('score') * 100.0 / F('total_questions')
+        ).aggregate(avg=Avg('weighted_score'))
+        accuracy = round(accuracy_qs['avg'], 1) if accuracy_qs['avg'] is not None else None
+
+        # Completion = unique correct questions / total available
+        unique_correct = QuizResponse.objects.filter(
+            attempt__user=user, correct=True
+        ).values('question_id').distinct().count()
+
+        completion = (
+            round((unique_correct / total_questions) * 100, 1)
+            if total_questions > 0 else 0
+        )
+
+        last_quiz = attempts.aggregate(latest=Max('date_taken'))['latest']
+        total_points = attempts.aggregate(total=Sum('points'))['total'] or 0
+
+        member_data.append({
+            'profile': p,
+            'name': user.get_full_name() if show_names or quanta.creator == p else p.anonymous_name,
+            'points': total_points,
+            'accuracy': accuracy,
+            'completion': completion,
+            'last_quiz': last_quiz,
+            'chain_length': p.chain_length,
+        })
+
+    # Sort by points descending
+    member_data.sort(key=lambda x: x['points'], reverse=True)
+
     return render(request, 'mcq/view_quanta.html', {
         'quanta': quanta,
-        'memberships': memberships,
+        'member_data': member_data,
         'show_names': show_names,
         'is_creator': quanta.creator == profile,
     })
@@ -492,8 +560,7 @@ def join_quanta(request, invite_code):
     try:
         quanta = Quanta.objects.get(invite_code=invite_code)
     except Quanta.DoesNotExist:
-        messages.error(request, "Quanta not found.")
-        return redirect('quanta_dashboard')
+        return redirect(f"{reverse('quanta_dashboard')}?error=1")
 
     # Avoid duplicate membership
     if not QuantaMembership.objects.filter(profile=profile, quanta=quanta).exists():

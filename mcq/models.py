@@ -96,7 +96,7 @@ class Keyword(models.Model):
 class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     date_taken = models.DateTimeField(auto_now_add=True)
-    score = models.IntegerField()
+    score = models.IntegerField() # percentage score
     total_questions = models.IntegerField()
     time_taken_seconds = models.IntegerField()
     keywords = models.ManyToManyField('Keyword', blank=True)
