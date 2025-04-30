@@ -38,7 +38,7 @@ function insertToDisplay(value) {
   }
 
   const constants = {
-    e_const: 'Math.E',
+    e_const: '1.602e-19',
     c_const: '3.00e8',
     h_const: '6.626e-34'
   };
@@ -115,13 +115,20 @@ function calculateResult() {
 
     console.log("Pre-eval expression:", expression);
 
-    // Handle normal ^ powers
-    const powerRegex = /(\([^()]*\)|[\d.eE+-]+)\^(\([^()]*\)|[\d.eE+-]+)/;
-    while (powerRegex.test(expression)) {
-      expression = expression.replace(powerRegex, (_, base, exp) => {
-        return `(Math.pow(${base}, ${exp}))`;
-      });
+
+    // Replace ^ with Math.pow safely
+    while (expression.includes('^')) {
+      console.log("Replacing ^ in expression:", expression);
+      expression = expression.replace(
+        /([^\s^]+)\^([^\s^]+)/,
+        (_, base, exp) => `(Math.pow(${base}, ${exp}))`
+      );
     }
+    console.log("updating")
+
+
+    console.log("Post-eval expression:", expression);
+    
 
     // Trigonometric functions
     expression = expression
