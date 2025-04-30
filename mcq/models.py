@@ -20,6 +20,9 @@ class Profile(models.Model):
     chain_length = models.IntegerField(default=1)
     last_chain_date = models.DateField(null=True, blank=True)
 
+    default_num_questions = models.PositiveIntegerField(default=10)
+    default_time_per_question = models.FloatField(default=1.0)
+    
     def update_chain(self):
         today = now().date()
         if self.last_chain_date == today:

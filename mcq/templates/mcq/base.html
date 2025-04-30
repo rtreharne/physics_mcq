@@ -38,6 +38,9 @@
 </head>
 
 <body data-superuser="{% if user.is_superuser %}true{% else %}false{% endif %}">
+  {% csrf_token %}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
     <div class="container-fluid">
@@ -125,6 +128,57 @@
         {% endblock %}
     </main>
 
+    <!-- Quiz Configuration Modal -->
+    <div class="modal fade" id="quizConfigModal" tabindex="-1" aria-labelledby="quizConfigModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="quizConfigModalLabel">Quiz Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="numQuestions" class="form-label">Number of Questions</label>
+              <input type="number"
+              class="form-control"
+              id="numQuestions"
+              name="num_questions"
+              form="keyword-form"
+              value="{{ user_profile.default_num_questions|default:10 }}"
+              min="5"
+              max="20"
+              step="1">
+                   
+              <label for="timePerQuestion" class="form-label">Time per Question (in minutes)</label>
+              <input type="number"
+              class="form-control"
+              id="timePerQuestion"
+              name="time_per_question"
+              form="keyword-form"
+              value="{{ user_profile.default_time_per_question|default:1.0 }}"
+              min="0.25"
+              step="0.25">            
+          </div>
+          <div class="modal-footer">
+            <div class="me-auto text-success small" id="settingsSavedMsg" style="display: none;">
+              ✅ Settings saved!
+            </div>
+            <button type="button" class="btn btn-primary" id="saveQuizSettingsBtn">Save Settings</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+                  </div>
+      </div>
+    </div>
+    </div>
+
+
+    <footer class="footer">
+      <div class="footer-content">
+        &copy; Dr. R. E. Treharne, 2025
+      </div>
+    </footer>
+    
+
     <div id="cookie-banner" class="cookie-banner d-none">
       <div class="cookie-content">
         <p>
@@ -149,7 +203,7 @@
     
         const isDev = window.location.hostname === "localhost";
     
-        if (!localStorage.getItem("cookieAccepted") || isDev) {
+        if (!localStorage.getItem("cookieAccepted")) {
           banner.classList.remove("d-none");
           setTimeout(() => banner.classList.add("show"), 100); // smooth fade-in
         }
@@ -161,6 +215,41 @@
         });
       });
     </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const saveBtn = document.getElementById("saveQuizSettingsBtn");
+        const savedMsg = document.getElementById("settingsSavedMsg");
+
+        saveBtn?.addEventListener("click", () => {
+          const numQuestions = document.getElementById("numQuestions").value;
+          const timePerQuestion = document.getElementById("timePerQuestion").value;
+          const csrfToken = document.querySelector('[name=csrf-token]')?.content;
+
+          fetch("{% url 'save_quiz_preferences' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+              num_questions: numQuestions,
+              time_per_question: timePerQuestion,
+            }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              savedMsg.style.display = "inline";
+              setTimeout(() => savedMsg.style.display = "none", 3000);
+            } else {
+              alert("Error saving settings.");
+            }
+          });
+        });
+      });
+    </script>
+
     
     
 </body>

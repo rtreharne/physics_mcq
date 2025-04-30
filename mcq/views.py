@@ -30,6 +30,27 @@ from .models import (
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+import json
+
+@login_required
+def save_quiz_preferences(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            num_q = int(data.get("num_questions", 10))
+            time_q = float(data.get("time_per_question", 1.0))
+
+            profile = request.user.profile
+            profile.default_num_questions = num_q
+            profile.default_time_per_question = time_q
+            profile.save()
+
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Invalid request method."})
 
 
 def test_404(request):
@@ -500,6 +521,12 @@ def view_attempt(request, attempt_id):
     if attempt.user:
         if not request.user.is_authenticated or request.user != attempt.user:
             return HttpResponseForbidden("You are not allowed to view this attempt.")
+        
+    # If user logged in, get their profile
+    if request.user.is_authenticated:
+        attempt_count = QuizAttempt.objects.filter(user=request.user).count()
+    else:
+        attempt_count = 5
 
     # Get responses and prefetch related question and subtopic
     responses = QuizResponse.objects.select_related('question__subtopic').filter(attempt=attempt)
@@ -513,6 +540,7 @@ def view_attempt(request, attempt_id):
         'attempt': attempt,
         'responses': responses,
         'quiz_url': quiz_url,
+        'attempt_count': attempt_count,
     })
 
 

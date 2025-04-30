@@ -8,6 +8,7 @@
 <meta name="csrf-token" content="{{ csrf_token }}">
 
 <h2>Quiz Review</h2>
+<p><strong>Attempts: {{ attempt_count }}</strong></p>
 <p><strong>Date:</strong> {{ attempt.date_taken }}</p>
 <p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</p>
 <p><strong>Points:</strong> {{ attempt.points }}</p>
@@ -89,6 +90,28 @@
   </a>
 </div>
 
+<!-- Buy Me a Coffee Modal -->
+<div class="modal fade" id="coffeeModal" tabindex="-1" aria-labelledby="coffeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-header">
+        <h5 class="modal-title w-100" id="coffeeModalLabel">Enjoying PhysicsMCQs?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        I created PhysicsMCQs.org to make high-quality, exam-style revision accessible and affordable for everyone.
+        If the site’s helped you or your students, please consider buying me a ☕️ to support its ongoing development and running costs. Every contribution makes a real difference — thank you!
+        <br><br>        <em>– <a href="https://www.linkedin.com/in/robtreharne" target="_blank">Dr. Robert Treharne</a></em>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <a href="https://www.buymeacoffee.com/robtreharne" class="btn btn-warning" target="_blank">
+          Buy Me a Coffee
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {% if user.is_superuser %}
 <script>
@@ -119,6 +142,16 @@
     });
   });
 </script>
+{% endif %}
+
+{% if attempt_count|divisibleby:5 %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const coffeeModal = new bootstrap.Modal(document.getElementById('coffeeModal'));
+    coffeeModal.show();
+  });
+</script>
+
 {% endif %}
 
 {% endblock %}

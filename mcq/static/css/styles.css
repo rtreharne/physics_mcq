@@ -658,3 +658,24 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
 }
 
 
+.footer {
+  background-color: #f9f9f9;
+  color: #555;
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  border-top: 1px solid #ddd;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the footer doesn't overlap with a fixed bottom bar */
+body {
+  margin-bottom: 80px; /* Adjust based on the height of your fixed bottom bar */
+}
+
+@media (max-width: 768px) {
+  body {
+    margin-bottom: 130px;
+}
+}

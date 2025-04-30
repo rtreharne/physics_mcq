@@ -23,7 +23,7 @@ class QuantaMembershipAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'anonymous_name')
+    list_display = ('user', 'anonymous_name', 'default_num_questions', 'default_time_per_question',)
     search_fields = ('user__email', 'anonymous_name')
 
 @admin.register(Subtopic)
