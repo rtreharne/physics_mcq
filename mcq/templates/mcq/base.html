@@ -144,7 +144,7 @@
               id="numQuestions"
               name="num_questions"
               form="keyword-form"
-              value="{{ user_profile.default_num_questions|default:10 }}"
+              value="{{ user.profile.default_num_questions|default:10 }}"
               min="5"
               max="20"
               step="1">
@@ -155,7 +155,7 @@
               id="timePerQuestion"
               name="time_per_question"
               form="keyword-form"
-              value="{{ user_profile.default_time_per_question|default:1.0 }}"
+              value="{{ user.profile.default_time_per_question|default:1.0 }}"
               min="0.25"
               step="0.25">            
           </div>
