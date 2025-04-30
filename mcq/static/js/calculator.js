@@ -118,14 +118,14 @@ function calculateResult() {
 
     // Replace ^ with Math.pow safely
     while (expression.includes('^')) {
-      console.log("Replacing ^ in expression:", expression);
-      expression = expression.replace(
+      const newExpr = expression.replace(
         /([^\s^]+)\^([^\s^]+)/,
         (_, base, exp) => `(Math.pow(${base}, ${exp}))`
       );
+    
+      if (newExpr === expression) break; // No match — avoid infinite loop
+      expression = newExpr;
     }
-    console.log("updating")
-
 
     console.log("Post-eval expression:", expression);
     
