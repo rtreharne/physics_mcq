@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.conf.urls import handler404
+
+handler404 = 'mcq.views.custom_404'
 
 
 from urllib.parse import urlencode

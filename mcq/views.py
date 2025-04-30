@@ -30,6 +30,15 @@ from .models import (
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
+
+def test_404(request):
+    return render(request, 'mcq/404.html', status=404)
+
+
+def custom_404(request, exception):
+    return render(request, "mcq/404.html", status=404)
+
 def annotate_with_accuracy(quanta_qs):
     quanta_with_stats = []
     total_questions = Question.objects.count()
