@@ -17,6 +17,8 @@ urlpatterns = [
     path('quanta/', views.quanta_dashboard, name='quanta_dashboard'),
     path('quanta/<int:quanta_id>/', views.view_quanta, name='view_quanta'),
     path('quanta/join/<str:invite_code>/', views.join_quanta, name='join_quanta'),
+    path('quanta/<int:quanta_id>/<str:anonymous_name>/', views.quanta_member_history, name='user_quiz_history'),
+
 
 
 

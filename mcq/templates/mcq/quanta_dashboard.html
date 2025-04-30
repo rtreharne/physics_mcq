@@ -28,13 +28,12 @@
       </div>
     </div>
     <p class="mb-0"><strong>Get started by creating or joining a Quanta today!</strong></p>
-  </div>
-  
+</div>
 
 {% if created_quanta %}
   <h4>Quanta You Created</h4>
   <ul class="list-group mb-4">
-    {% for quanta, accuracy in created_quanta %}
+    {% for quanta, accuracy, completion in created_quanta %}
       <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
@@ -45,7 +44,8 @@
               {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
               {% endif %}
               · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
-              {% if accuracy is not None %} · 🧠 Accuracy: {{ accuracy }}%{% endif %}
+              {% if accuracy is not None %} · 🧠 Avg Accuracy: {{ accuracy }}%{% endif %}
+              {% if completion is not None %} · 📘 Avg Completion: {{ completion }}%{% endif %}
             </small>
           </div>
           <span class="badge bg-primary">Code: {{ quanta.invite_code }}</span>
@@ -58,8 +58,12 @@
 {% if member_quanta %}
   <h4>Quanta You Joined</h4>
   <ul class="list-group mb-4">
-    {% for quanta in member_quanta %}
-      <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
+    {% for quanta, accuracy, completion in member_quanta %}
+      {% if quanta and quanta.id %}
+        <a href="{% url 'view_quanta' quanta.id %}" class="text-decoration-none text-dark">
+      {% else %}
+        <div class="text-decoration-none text-dark">
+      {% endif %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
             <strong>{{ quanta.name }}</strong><br>
@@ -69,16 +73,23 @@
               {% elif quanta.visibility == "anonymous" %}🕵️ Everyone anonymous
               {% endif %}
               · {{ quanta.memberships.count }} member{{ quanta.memberships.count|pluralize }}
+              {% if accuracy is not None %} · 🧠 Avg Accuracy: {{ accuracy }}%{% endif %}
+              {% if completion is not None %} · 📘 Avg Completion: {{ completion }}%{% endif %}
             </small>
           </div>
-          <span class="text-muted small">Created by: 
-            {% if quanta.visibility == "anonymous" %}{{ quanta.creator.anonymous_name }}
+          <span class="text-muted small">Created by:
+            {% if quanta.visibility == "anonymous" %}
+              {{ quanta.creator.anonymous_name }}
             {% else %}
               {{ quanta.creator.user.get_full_name|default:quanta.creator.anonymous_name }}
             {% endif %}
           </span>
         </li>
-      </a>
+      {% if quanta and quanta.id %}
+        </a>
+      {% else %}
+        </div>
+      {% endif %}
     {% endfor %}
   </ul>
 {% endif %}
@@ -129,18 +140,15 @@
     }
   }
 
-  // Show modal with error if URL contains ?error=1
   window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('error') === '1') {
       const errorDiv = document.getElementById('joinQuantumError');
       errorDiv.classList.remove('d-none');
-
       const joinModal = new bootstrap.Modal(document.getElementById('joinQuantumModal'));
       joinModal.show();
     }
   });
 </script>
-
 
 {% endblock %}

@@ -653,4 +653,8 @@ margin-top: 10vh !important; /* Push answers down ~30% of the viewport height */
   background-color: #f8f9fa;
 }
 
+.member-stats div {
+  min-width: 160px;
+}
+
 

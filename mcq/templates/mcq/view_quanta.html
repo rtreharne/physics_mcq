@@ -6,33 +6,101 @@
 
 <p>
   <strong>Invite Link:</strong>
-  <code>{{ request.build_absolute_uri|cut:request.get_full_path }}{% url 'join_quanta' invite_code=quanta.invite_code %}
-</code>
+  <code id="inviteLink">{{ request.build_absolute_uri|cut:request.get_full_path }}{% url 'join_quanta' invite_code=quanta.invite_code %}</code>
+  <button id="copyBtn" class="btn btn-sm btn-outline-primary ms-2">Copy</button>
+  <span id="copyMsg" class="text-success ms-2" style="display: none;">Link copied!</span>
 </p>
 
+
 <p><strong>Visibility:</strong>
-  {% if quanta.visibility == 'creator_only' %} Only visible to you (creator)
+  {% if quanta.visibility == 'creator_only' %} Names only visible to creator
   {% elif quanta.visibility == 'all_members' %} Visible to all members
   {% else %} Anonymous
   {% endif %}
 </p>
 
+{% if quantum_accuracy is not None %}
+  <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center mt-4">
+    <div>
+      <strong>🔬 Quantum Accuracy:</strong> {{ quantum_accuracy }}%
+    </div>
+    <div>
+      <strong>📘 Quantum Completion:</strong> {{ quantum_completion }}%
+    </div>
+  </div>
+{% else %}
+  <div class="text-muted mt-4">No quiz data yet for this Quantum.</div>
+{% endif %}
+
+
 <h4 class="mt-4">Members ({{ member_data|length }})</h4>
-<ul class="list-group">
-  {% for member in member_data %}
-    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-      <div>
-        <strong>{{ member.name }}</strong><br>
-        <small class="text-muted">
-          {% if member.accuracy is not None %}🧠 Accuracy: {{ member.accuracy }}% · {% endif %}
-          📈 Completion: {{ member.completion }}% ·
-          ⭐ Points: {{ member.points }} · 
-          🔗 Chain: {{ member.chain_length }} · 
-          🕓 Last Quiz: {{ member.last_quiz|date:"M j, H:i" }}
-        </small>
-      </div>
-    </li>
-  {% endfor %}
-</ul>
+<div class="table-responsive">
+  <table class="table table-bordered table-striped table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th class="text-center">Rank</th>
+        <th>Name</th>
+        <th>🧠 Accuracy</th>
+        <th>📈 Completion</th>
+        <th>⭐ Points</th>
+        <th>🔗 Chain</th>
+        <th>🕓 Last Quiz</th>
+        <th class="text-center">Quiz History</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for member in member_data %}
+        <tr>
+          <td class="text-center">{{ forloop.counter }}</td>
+          <td><strong>{{ member.name }}</strong></td>
+          <td>
+            {% if member.accuracy is not None %}
+              {{ member.accuracy }}%
+            {% else %}
+              <span class="text-muted">–</span>
+            {% endif %}
+          </td>
+          <td>{{ member.completion }}%</td>
+          <td>{{ member.points }}</td>
+          <td>{{ member.chain_length }}</td>
+          <td>{{ member.last_quiz|date:"M j, H:i" }}</td>
+          <td class="text-center">
+            <a href="{% url 'user_quiz_history' quanta.id member.anonymous_name %}" class="btn btn-sm btn-outline-secondary">
+              View
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+<!-- Bottom Bar -->
+<div class="bottom-bar-container">
+  <div class="bottom-bar-content">
+    <a href="{% url 'quanta_dashboard' %}" class="btn btn-primary btn-lg">
+      Back to Quanta
+    </a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    const linkText = document.getElementById('inviteLink').innerText;
+    navigator.clipboard.writeText(linkText).then(function () {
+      const msg = document.getElementById('copyMsg');
+      msg.style.display = 'inline';
+      setTimeout(() => {
+        msg.style.display = 'none';
+      }, 2000);
+    });
+  });
+</script>
+
 
 {% endblock %}

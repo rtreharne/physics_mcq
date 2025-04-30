@@ -1,0 +1,209 @@
+{% extends "mcq/base.html" %}
+{% load static %}
+{% load time_filters %}
+{% load custom_tags %}
+
+{% block title %}My Quiz History{% endblock %}
+
+{% block content %}
+
+<div class="alert alert-info mb-4">
+  <div class="text-center text-md-start mb-3">
+    <strong class="d-block mb-2">
+        Progress for {{ anonymous_name }}
+      </strong>
+      
+
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+      <span class="badge bg-primary px-3 py-2">
+        This Month: {{ points_monthly }} pts<br class="d-md-none"/> (Rank #{{ monthly_rank|default:"–" }})
+      </span>
+      <span class="badge bg-secondary px-3 py-2">
+        All Time: {{ points_all_time }} pts<br class="d-md-none"/> (Rank #{{ all_time_rank|default:"–" }})
+      </span>
+      <span class="badge bg-warning text-dark px-3 py-2">
+        🔗 Chain: {{ user.profile.chain_length }} day{{ user.profile.chain_length|pluralize }}
+      </span>
+    </div>
+
+    <!-- Accuracy Bar -->
+    <div class="mt-3">
+      <small class="fw-semibold text-muted">Overall Accuracy:</small>
+      <div class="progress" style="height: 20px;">
+        <div class="progress-bar 
+          {% if overall_accuracy < 51 %}bg-danger
+          {% elif overall_accuracy < 80 %}bg-warning text-dark
+          {% else %}bg-success
+          {% endif %}" style="width: {{ overall_accuracy }}%;">
+          {{ overall_accuracy }}%
+        </div>
+      </div>
+    </div>
+
+      <!-- Completion Bar -->
+      <div class="mt-4">
+        <small class="fw-semibold text-muted">Overall Completed:</small>
+        <div class="progress" style="height: 20px;">
+          <div class="progress-bar" style="width: {{ overall_completion }}%;">
+            {{ overall_completion }}%
+          </div>
+        </div>
+      </div>
+
+  </div>
+</div>
+
+
+{% if topic_accuracy %}
+<h2 class="mt-5">Accuracy by Topic</h2>
+
+<table class="table table-bordered mt-3">
+  <thead>
+    <tr>
+      <th>Topic</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in topic_accuracy %}
+    <tr class="topic-row 
+        {% if item.accuracy < 51 %}table-danger
+        {% elif item.accuracy < 80 %}table-warning
+        {% else %}table-success
+        {% endif %}">
+      <td colspan="2" class="py-4 px-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <strong class="fs-5">
+            <a href="{% url 'quiz' %}?subtopics_list={% for sub in item.subtopics %}{{ sub.subtopic.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+              class="topic-link">
+              {{ item.topic.name }}
+            </a>
+          </strong>
+          <button class="btn btn-sm btn-outline-secondary"
+            data-bs-toggle="collapse"
+            data-bs-target="#subtopics-{{ forloop.counter }}"
+            aria-expanded="false"
+            aria-controls="subtopics-{{ forloop.counter }}">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+        </div>
+
+        <!-- Accuracy -->
+        <div class="mb-4">
+          <small class="fw-semibold text-muted">Accuracy: {{ item.correct }}/{{ item.total }}</small>
+          <div class="progress mt-1" style="height: 20px;">
+            <div class="progress-bar 
+                {% if item.accuracy < 51 %}bg-danger
+                {% elif item.accuracy < 80 %}bg-warning text-dark
+                {% else %}bg-success
+                {% endif %}" 
+                style="width: {{ item.accuracy }}%;">
+              {{ item.accuracy }}%
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion -->
+        <div>
+          <small class="fw-semibold text-muted">Completed: {{ item.completed }}/{{ item.total_available }}</small>
+          <div class="progress mt-1" style="height: 20px;">
+            <div class="progress-bar bg-info text-dark"
+              style="width: {{ item.completion_rate }}%;"
+              title="Completed: {{ item.completed }} of {{ item.total_available }}">
+              {{ item.completion_rate }}%
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Collapsible Subtopic Row -->
+    <tr class="collapse" id="subtopics-{{ forloop.counter }}">
+      <td colspan="2" class="bg-light">
+        {% if item.subtopics %}
+        <ul class="list-unstyled mb-0 ps-2 py-2" style="margin-left: 5%; margin-right: 5%;">
+          {% for sub in item.subtopics %}
+          <li class="mb-2 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
+            <div>
+              <strong>
+                <a href="{% url 'quiz' %}?subtopics_list={{ sub.subtopic.id }}"
+                  class="subtopic-link">
+                  {{ sub.subtopic.name }}
+                </a>
+              </strong>
+              <span class="text-muted small ms-md-2 d-block d-md-inline">
+                {{ sub.correct }}/{{ sub.total }} correct
+              </span>
+            </div>
+            <span class="badge mt-1 mt-md-0
+              {% if sub.accuracy < 51 %}bg-danger
+              {% elif sub.accuracy < 80 %}bg-warning text-dark
+              {% else %}bg-success
+              {% endif %}">
+              {{ sub.accuracy }}%
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0 p-2">No subtopic data</p>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<div class="mb-3 d-flex flex-wrap gap-3">
+  <div><span class="badge bg-success">80%+</span> <span class="text-muted">Strong</span></div>
+  <div><span class="badge bg-warning text-dark">51–79%</span> <span class="text-muted">Needs revision</span></div>
+  <div><span class="badge bg-danger">≤50%</span> <span class="text-muted">Focus urgently</span></div>
+</div>
+{% else %}
+  <p class="text-muted">No topic accuracy data yet.</p>
+{% endif %}
+
+<br>
+
+<h2>My Quiz History</h2>
+
+{% if attempts %}
+  <table class="table table-bordered table-striped mt-4">
+    <thead class="thead-dark">
+      <tr>
+        <th>Date</th>
+        <th>Score</th>
+        <th>Points</th>
+        <th>Time Taken</th>
+        <th>Quiz</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for attempt in attempts %}
+        <tr>
+          <td>{{ attempt.date_taken|date:"d M Y H:i" }}</td>
+          <td>{{ attempt.score }} / {{ attempt.total_questions }} ({{ attempt.score|percent:attempt.total_questions }})</td>
+          <td>{{ attempt.points }}</td>
+          <td>{{ attempt.time_taken_seconds|seconds_to_minutes }}</td>
+          <td>
+            <a href="{% url 'view_attempt' attempt.id %}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="text-muted">No quiz attempts yet.</p>
+{% endif %}
+
+<!-- Bottom Bar -->
+<div class="bottom-bar-container">
+    <div class="bottom-bar-content text-end">
+      <a href="{% url 'view_quanta' quanta.id %}" class="btn btn-primary btn-lg">
+        Back to Quantum
+      </a>
+    </div>
+  </div>
+  
+
+{% endblock %}
