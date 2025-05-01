@@ -2,36 +2,53 @@
 {% block title %}Leaderboard - Physics MCQs{% endblock %}
 {% block content %}
 
-
 <h1 class="mb-4">Leaderboards</h1>
 
-<div class="row">
-  <div class="col-md-6">
-    <h3>This Month</h3>
-    <ol class="list-group list-group-numbered">
-      {% for entry in monthly_leaderboard %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ entry.user__profile__anonymous_name }}
-          <span class="badge bg-primary rounded-pill">{{ entry.points }}</span>
-        </li>
-      {% empty %}
-        <li class="list-group-item">No data yet</li>
-      {% endfor %}
-    </ol>
-  </div>
-
-  <div class="col-md-6">
-    <h3>All Time</h3>
-    <ol class="list-group list-group-numbered">
-      {% for entry in all_time_leaderboard %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ entry.user__profile__anonymous_name }}
-          <span class="badge bg-success rounded-pill">{{ entry.points }}</span>
-        </li>
-      {% empty %}
-        <li class="list-group-item">No data yet</li>
-      {% endfor %}
-    </ol>
-  </div>
+<div class="row row-cols-1 row-cols-md-2 g-4">
+  {% for board in leaderboards %}
+    {% with timeframe=board.0 leaderboard=board.1 rank=board.2 label=board.3%}
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h5 m-0">{{ timeframe }}</h2>
+            <div class="small text-muted">{{ label }}</div>
+            {% if rank %}
+              <span class="badge bg-secondary">You are #{{ rank }}</span>
+            {% endif %}
+          </div>
+          <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+            <ol class="leaderboard-list p-0 m-0">
+              {% for entry in leaderboard %}
+                <li class="py-2 px-3 border-bottom">
+                  <div class="d-flex w-100 align-items-start">
+                    <div class="rank-number mt-1">#{{ forloop.counter }}</div>
+                    <div class="flex-grow-1 ms-4 text-end">
+                      <strong>{{ entry.user__profile__anonymous_name }}</strong><br>
+                      <small>
+                        Points: {{ entry.points }} |
+                        Chain: {{ entry.user__profile__chain_length }} |
+                        Attempts: {{ entry.quiz_attempts }}
+                      </small>
+                      {% if user.is_authenticated and entry.user_id == user.id %}
+                        <div><span class="badge bg-info text-dark mt-1">You</span></div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </li>
+              {% empty %}
+                <li class="px-3 py-2">No data yet</li>
+              {% endfor %}
+            </ol>
+            
+            
+            
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+  {% endfor %}
 </div>
+<br>
+<br>
+
 {% endblock %}

@@ -20,6 +20,7 @@ urlpatterns = [
     path('quanta/<int:quanta_id>/<str:anonymous_name>/', views.quanta_member_history, name='user_quiz_history'),
     path('test-404/', views.test_404, name='test_404'),
     path('save-quiz-preferences/', views.save_quiz_preferences, name='save_quiz_preferences'),
+    path('dashboard/', views.monitoring_dashboard, name='monitoring_dashboard'),
 
 
 

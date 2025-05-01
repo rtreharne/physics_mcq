@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.shortcuts import render
 from datetime import timedelta
+from django.utils import timezone
 import string, random
 
 def generate_unique_invite_code():
@@ -22,6 +23,12 @@ class Profile(models.Model):
 
     default_num_questions = models.PositiveIntegerField(default=10)
     default_time_per_question = models.FloatField(default=1.0)
+
+    is_simulated = models.BooleanField(default=False)
+
+    accuracy_mean = models.FloatField(default=0.7)
+    accuracy_stddev = models.FloatField(default=0.1)
+
     
     def update_chain(self):
         today = now().date()
@@ -98,15 +105,26 @@ class Keyword(models.Model):
 
 class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    date_taken = models.DateTimeField(auto_now_add=True)
-    score = models.IntegerField() # percentage score
+    date_taken = models.DateTimeField(default=timezone.now)
+    score = models.IntegerField()  # percentage score
     total_questions = models.IntegerField()
     time_taken_seconds = models.IntegerField()
     keywords = models.ManyToManyField('Keyword', blank=True)
-    points = models.IntegerField(default=0) 
+    points = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.user and self.score is not None:
+            try:
+                profile = self.user.profile
+                chain = min(7, max(1, profile.chain_length))  # Cap at 7×, minimum 1×
+                self.points = self.score * chain * 100
+            except Profile.DoesNotExist:
+                self.points = self.score
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"QuizAttempt #{self.id} - {self.score}/{self.total_questions}"
+
 
 class QuizResponse(models.Model):
     attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='responses')

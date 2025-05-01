@@ -1,0 +1,141 @@
+{% extends "mcq/base.html" %}
+{% load static %}
+
+{% block title %}Monitoring Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <h1 class="text-2xl font-bold mb-4">📊 Monitoring Dashboard</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-xl p-4 shadow">
+      <p><strong>Current Time:</strong> {{ now }}</p>
+      <p><strong>Total Users:</strong> {{ total_profiles }}</p>
+      <p><strong>Simulated Users:</strong> {{ simulated_profiles }}</p>
+      <p><strong>Real Users:</strong> {{ real_profiles }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl p-4 shadow">
+      <p><strong>Total Quizzes Taken:</strong> {{ total_quizzes }}</p>
+      <p><strong>Quizzes Taken Today:</strong> {{ quizzes_today }}</p>
+      <p><strong>Active Chains (≥1):</strong> {{ active_streaks }}</p>
+      <p><strong>Expected Simulated Users (logistic):</strong> {{ expected_users }}</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl p-6 shadow mb-4">
+    <h2 class="text-xl font-semibold mb-2">Interactive Activity Chart</h2>
+
+    <div class="mb-2 space-x-4">
+      <label><input type="checkbox" id="toggleUsers" checked> Show Users</label>
+      <label><input type="checkbox" id="toggleQuizzes" checked> Show Quizzes</label>
+    </div>
+
+    <canvas id="growthChart" height="100"></canvas>
+    <button onclick="growthChart.resetZoom()" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm mt-3">
+      🔁 Reset Zoom
+    </button>
+  </div>
+</div>
+
+<!-- Required scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
+<script>
+  const rawData = {{ data_points|safe }};
+  console.log("📊 Chart data:", rawData);
+
+  const growthChart = new Chart(document.getElementById('growthChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'New Users',
+          data: rawData.map(d => ({ x: d.date, y: d.users })),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          tension: 0.2,
+          fill: true,
+          hidden: false,
+          id: 'users'
+        },
+        {
+          label: 'Quiz Attempts',
+          data: rawData.map(d => ({ x: d.date, y: d.quizzes })),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          tension: 0.2,
+          fill: true,
+          hidden: false,
+          id: 'quizzes'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'day',
+            tooltipFormat: 'yyyy-MM-dd'
+          },
+          title: { display: true, text: 'Date' }
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Count' }
+        }
+      },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            afterBody: function(tooltipItems) {
+              const index = tooltipItems[0].dataIndex;
+              const d = rawData[index];
+              return [
+                `📊 Avg Score: ${d.avg_score}%`,
+                `🔥 Avg Chain: ${d.avg_chain}`
+              ];
+            }
+          }
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'x'
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: { minRange: 1 }
+          }
+        }
+      }
+    }
+  });
+
+  // Toggle visibility of datasets
+  document.getElementById('toggleUsers').addEventListener('change', (e) => {
+    const ds = growthChart.data.datasets.find(d => d.id === 'users');
+    ds.hidden = !e.target.checked;
+    growthChart.update();
+  });
+
+  document.getElementById('toggleQuizzes').addEventListener('change', (e) => {
+    const ds = growthChart.data.datasets.find(d => d.id === 'quizzes');
+    ds.hidden = !e.target.checked;
+    growthChart.update();
+  });
+</script>
+{% endblock %}

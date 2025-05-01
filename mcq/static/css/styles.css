@@ -679,3 +679,18 @@ body {
     margin-bottom: 130px;
 }
 }
+
+.leaderboard-list {
+  list-style: none;
+}
+
+.leaderboard-list .rank-number {
+  font-weight: bold;
+  min-width: 3ch;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.leaderboard-list li:nth-child(even) {
+  background-color: #fdfdfd;
+}

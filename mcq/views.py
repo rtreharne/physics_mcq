@@ -3,6 +3,10 @@ import random
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
+from django.db.models import Prefetch
+from django.db.models.functions import TruncHour
+from django.utils.timezone import localtime
+
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
@@ -33,6 +37,9 @@ User = get_user_model()
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import json
+
+from django.contrib.admin.views.decorators import staff_member_required
+import math
 
 @login_required
 def save_quiz_preferences(request):
@@ -219,14 +226,16 @@ def save_quiz(request):
     data = json.loads(request.body)
 
     user = request.user if request.user.is_authenticated else None
+
+    # Create quiz attempt (points auto-calculated via save())
     attempt = QuizAttempt.objects.create(
         user=user,
         score=data['score'],
         total_questions=data['total_questions'],
-        time_taken_seconds=data['time_taken'],
-        points=data['points']
+        time_taken_seconds=data['time_taken']
     )
 
+    # Create responses
     for r in data['responses']:
         QuizResponse.objects.create(
             attempt=attempt,
@@ -242,7 +251,6 @@ def save_quiz(request):
             today = timezone.now().date()
             yesterday = today - timedelta(days=1)
 
-            # Prevent resetting chain multiple times per day
             if profile.last_chain_date != today:
                 if profile.last_chain_date == yesterday:
                     profile.chain_length = (profile.chain_length or 0) + 1
@@ -253,35 +261,72 @@ def save_quiz(request):
                 profile.save()
 
         except Profile.DoesNotExist:
-            pass  # Optional: log or handle missing profile
+            pass  # Optional: log missing profile
 
-    return JsonResponse({'success': True, 'attempt_id': attempt.id})
+    return JsonResponse({
+        'success': True,
+        'attempt_id': attempt.id,
+        'points_awarded': attempt.points  # Optional bonus info
+    })
 
-def get_leaderboard_data():
-    start_of_month = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+def get_leaderboard_queryset(start_date=None):
+    qs = QuizAttempt.objects.filter(user__isnull=False)
+    if start_date:
+        qs = qs.filter(date_taken__gte=start_date)
 
-    all_time = (
-        QuizAttempt.objects.filter(user__isnull=False)
-        .values("user__profile__anonymous_name")
-        .annotate(points=Sum("points"))
-        .order_by("-points")[:10]
+    return (
+        qs.values("user__profile__anonymous_name", "user__profile__chain_length", "user_id")
+        .annotate(
+            points=Sum("points"),
+            quiz_attempts=Count("id")
+        )
+        .order_by("-points")[:100]
     )
 
-    this_month = (
-        QuizAttempt.objects.filter(user__isnull=False, date_taken__gte=start_of_month)
-        .values("user__profile__anonymous_name")
+def get_user_rank(user, start_date=None):
+    if not user.is_authenticated:
+        return None
+
+    qs = QuizAttempt.objects.filter(user__isnull=False)
+    if start_date:
+        qs = qs.filter(date_taken__gte=start_date)
+
+    # Aggregate all user scores
+    scores = (
+        qs.values("user_id")
         .annotate(points=Sum("points"))
-        .order_by("-points")[:10]
+        .order_by("-points")
     )
 
-    return this_month, all_time
+    user_scores = list(scores)
+    for i, entry in enumerate(user_scores, start=1):
+        if entry["user_id"] == user.id:
+            return i
+    return None
+
+
 
 def leaderboard_view(request):
-    this_month, all_time = get_leaderboard_data()
+    now_dt = localtime(now())
+    today = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    week = today - timedelta(days=today.weekday())
+    month = now_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    year = now_dt.replace(month=9, day=1, hour=0, minute=0, second=0, microsecond=0)
+    if year > now_dt:
+        year = year.replace(year=year.year - 1)
+
+    leaderboards = [
+        ("Today", get_leaderboard_queryset(today), get_user_rank(request.user, today), today.strftime("%-d %b %Y"), "border border-2 border-danger"),
+        ("This Week", get_leaderboard_queryset(week), get_user_rank(request.user, week), f"w/c {week.strftime('%-d %b %Y')}", "border border-2 border-warning"),
+        ("This Month", get_leaderboard_queryset(month), get_user_rank(request.user, month), month.strftime("%B %Y"), "border border-2 border-success"),
+        ("This Year", get_leaderboard_queryset(year), get_user_rank(request.user, year), f"from Sep {year.year}", "border border-2 border-primary"),
+    ]
+
+
     return render(request, "mcq/leaderboard.html", {
-        "monthly_leaderboard": this_month,
-        "all_time_leaderboard": all_time
+        "leaderboards": leaderboards
     })
+
 
 from collections import defaultdict
 from mcq.models import Topic, Subtopic, Question, QuizResponse
@@ -729,3 +774,82 @@ def join_quanta(request, invite_code):
         messages.info(request, "You are already a member of this Quanta.")
 
     return redirect('view_quanta', quanta_id=quanta.id)
+
+
+
+@staff_member_required
+def monitoring_dashboard(request):
+    current_time = now()
+    window_hours = 24 * 7  # last 7 days
+    start_time = current_time - timedelta(hours=window_hours)
+
+    # Group QuizAttempts by hour
+    quiz_stats = (
+        QuizAttempt.objects
+        .filter(date_taken__gte=start_time)
+        .annotate(hour=TruncHour('date_taken'))
+        .values('hour')
+        .annotate(
+            quizzes=Count('id'),
+            avg_score=Avg('score'),
+        )
+    )
+
+    # Calculate avg_chain from related Profiles
+    chain_map = {}
+    for q in quiz_stats:
+        hour = q['hour']
+        user_ids = QuizAttempt.objects.filter(date_taken__hour=hour.hour, date_taken__date=hour.date()).values_list('user', flat=True)
+        chains = Profile.objects.filter(user__id__in=user_ids).aggregate(avg=Avg('chain_length'))['avg'] or 0
+        chain_map[hour] = round(chains, 1)
+
+    # Group Users by hour
+    user_stats = (
+        User.objects
+        .filter(date_joined__gte=start_time)
+        .annotate(hour=TruncHour('date_joined'))
+        .values('hour')
+        .annotate(users=Count('id'))
+    )
+
+    # Merge into a single dict keyed by datetime
+    stats_map = {}
+    for item in quiz_stats:
+        hour = item['hour']
+        stats_map[hour] = {
+            'date': hour.isoformat(),
+            'quizzes': item['quizzes'],
+            'avg_score': round(item['avg_score'] or 0),
+            'avg_chain': chain_map.get(hour, 0),
+            'users': 0  # placeholder
+        }
+
+    for item in user_stats:
+        hour = item['hour']
+        if hour not in stats_map:
+            stats_map[hour] = {
+                'date': hour.isoformat(),
+                'quizzes': 0,
+                'avg_score': 0,
+                'avg_chain': 0,
+                'users': item['users']
+            }
+        else:
+            stats_map[hour]['users'] = item['users']
+
+    # Sort by datetime
+    data_points = [stats_map[key] for key in sorted(stats_map.keys())]
+
+    context = {
+        "data_points": data_points,
+        "now": current_time,
+        "total_profiles": Profile.objects.count(),
+        "real_profiles": Profile.objects.filter(is_simulated=False).count(),
+        "simulated_profiles": Profile.objects.filter(is_simulated=True).count(),
+        "quizzes_today": QuizAttempt.objects.filter(date_taken__date=current_time.date()).count(),
+        "total_quizzes": QuizAttempt.objects.count(),
+        "active_streaks": Profile.objects.filter(chain_length__gte=1).count(),
+        "expected_users": int(5000 / (1 + math.exp(-0.03 * ((now() - current_time.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)).total_seconds() / 3600 - 360))))
+    }
+
+    return render(request, "mcq/dashboard.html", context)
