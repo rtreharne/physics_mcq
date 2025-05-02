@@ -17,7 +17,8 @@
 
 
 
-<form method="get" action="{% url 'quiz' %}" id="keyword-form">
+<form method="get" action="{% url 'quiz' %}" id="keyword-form" novalidate>
+
   <!-- Hidden input for final comma-separated list -->
   <input type="hidden" name="subtopics" id="subtopics-consolidated">
 
