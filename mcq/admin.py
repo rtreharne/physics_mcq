@@ -7,6 +7,21 @@ import csv, io
 from .models import Profile, Topic, ExamBoard, Keyword, Question, QuizAttempt, QuizResponse, Subtopic, Quanta, QuantaMembership
 from .forms import TopicCSVUploadForm
 
+from django.contrib.admin import SimpleListFilter
+
+class ExamBoardListFilter(SimpleListFilter):
+    title = "Exam board"
+    parameter_name = "exam_board"
+
+    def lookups(self, request, model_admin):
+        from .models import ExamBoard
+        return [(eb.id, eb.name) for eb in ExamBoard.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(exam_boards__id=self.value())
+        return queryset
+
 
 @admin.register(Quanta)
 class QuantaAdmin(admin.ModelAdmin):
@@ -25,6 +40,7 @@ class QuantaMembershipAdmin(admin.ModelAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'anonymous_name', 'default_num_questions', 'default_time_per_question',)
     search_fields = ('user__email', 'anonymous_name')
+
 
 @admin.register(Subtopic)
 class SubtopicAdmin(admin.ModelAdmin):
@@ -81,10 +97,14 @@ admin.site.register(ExamBoard)
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('question_text', 'topic', 'subtopic', 'difficulty', 'flagged')
-    list_filter = ('flagged', 'difficulty', 'topic',)
+    list_display = ('question_text', 'topic', 'subtopic', 'difficulty', 'get_exam_boards', 'flagged')
+    list_filter = ('flagged', 'difficulty', 'topic', ExamBoardListFilter)
     search_fields = ('question_text',)
     list_editable = ('flagged',)
+
+    def get_exam_boards(self, obj):
+        return ", ".join(b.name for b in obj.exam_boards.all())
+    get_exam_boards.short_description = 'Exam Boards'
     
     def get_urls(self):
         urls = super().get_urls()

@@ -21,6 +21,7 @@ urlpatterns = [
     path('test-404/', views.test_404, name='test_404'),
     path('save-quiz-preferences/', views.save_quiz_preferences, name='save_quiz_preferences'),
     path('dashboard/', views.monitoring_dashboard, name='monitoring_dashboard'),
+    path('advanced-settings/', views.advanced_settings, name='advanced_settings'),
 
 
 

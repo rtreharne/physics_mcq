@@ -40,15 +40,16 @@
                 <div class="form-check form-check-inline keyword-check">
                   
                   <input class="form-check-input subtopic-checkbox"
-                    type="checkbox"
-                    value="{{ subtopic.id }}"
-                    id="subtopic-{{ subtopic.id }}">
-           
-
-                  <label class="form-check-label" for="subtopic-{{ subtopic.id }}">
+                        type="checkbox"
+                        value="{{ subtopic.id }}"
+                        id="subtopic-{{ subtopic.id }}"
+                        {% if subtopic.id in selected_subtopics %}checked{% endif %}
+                        {% if subtopic.id in excluded_subtopic_ids %}disabled{% endif %}>
+                  <label class="form-check-label {% if subtopic.id in excluded_subtopic_ids %}text-muted opacity-50{% endif %}"
+                        for="subtopic-{{ subtopic.id }}">
                     {{ subtopic.name }} <span class="badge bg-secondary">{{ subtopic.question_count }}</span>
-
                   </label>
+
                 </div>
               {% empty %}
                 <p class="text-muted">No subtopics</p>
@@ -104,18 +105,25 @@
 
     // Topic header click toggles all subtopics
     const topicTitles = document.querySelectorAll('.topic-title');
+
     topicTitles.forEach(title => {
       title.addEventListener('click', () => {
         const topicId = title.dataset.topic;
         const subtopicContainer = document.getElementById('subtopics-' + topicId);
         const checkboxes = subtopicContainer.querySelectorAll('input[type="checkbox"]');
 
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-        checkboxes.forEach(cb => cb.checked = !allChecked);
+        // Only consider non-disabled checkboxes for toggling
+        const activeCheckboxes = Array.from(checkboxes).filter(cb => !cb.disabled);
+        const allActiveChecked = activeCheckboxes.every(cb => cb.checked);
 
-        updateButtonStates(); // Update buttons when toggling all
+        activeCheckboxes.forEach(cb => {
+          cb.checked = !allActiveChecked;
+        });
+
+        updateButtonStates(); // ✅ still update button state
       });
     });
+
 
     // On form submit, consolidate selected subtopics into hidden input
     form.addEventListener("submit", function () {

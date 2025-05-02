@@ -45,6 +45,14 @@
 
       <h4>{{ question.question_text|safe }}</h4>
 
+      
+      <p class="text-muted small mt-1">
+        <i class="bi bi-journal-bookmark me-1"></i>
+        {{ question.exam_boards.all|join:", " }}
+
+      </p>
+
+
       <div class="quiz-answers mt-3 answer-block-offset">
         {% with question_index=forloop.counter0 %}
           {% for letter in "ABCD" %}

@@ -154,13 +154,16 @@ def home(request):
     topics = Topic.objects.prefetch_related('subtopics').order_by('name')
     total_questions = Question.objects.count()
 
-    # Capture selected subtopics from query string
     selected_subtopics = request.GET.get('subtopics', '')
     selected_subtopics = list(map(int, selected_subtopics.split(','))) if selected_subtopics else []
 
+    # Get excluded subtopics if user is authenticated
+    excluded_subtopic_ids = set()
+    if request.user.is_authenticated:
+        excluded_subtopic_ids = set(request.user.profile.excluded_subtopics.values_list('id', flat=True))
+
     for topic in topics:
         topic.question_count = Question.objects.filter(topic=topic).count()
-
         for subtopic in topic.subtopics.all():
             subtopic.question_count = Question.objects.filter(subtopic=subtopic).count()
 
@@ -168,6 +171,7 @@ def home(request):
         'topics': topics,
         'selected_subtopics': selected_subtopics,
         'total_questions': total_questions,
+        'excluded_subtopic_ids': excluded_subtopic_ids, 
     })
 
 
@@ -188,12 +192,24 @@ def filtered_quiz(request):
     num_questions = int(request.GET.get('num_questions', 10))
     time_per_question = float(request.GET.get('time_per_question', 1.0))
 
-    queryset = Question.objects.select_related('topic', 'subtopic').filter(
+    queryset = Question.objects.select_related('topic', 'subtopic').prefetch_related('exam_boards').filter(
         subtopic__id__in=subtopic_ids
     ).distinct()
 
     if user:
-        # Prioritize unseen questions for authenticated users
+        excluded_boards = list(user.profile.excluded_exam_boards.values_list('id', flat=True))
+
+        # Annotate how many NON-excluded boards each question has
+        queryset = queryset.annotate(
+            allowed_board_count=Count('exam_boards', filter=~Q(exam_boards__id__in=excluded_boards))
+        ).filter(
+            allowed_board_count__gt=0  # Keep only questions with at least one allowed board
+        )
+
+
+
+
+        # ✅ Prioritize unseen questions
         correct_before = QuizResponse.objects.filter(
             question=OuterRef('pk'),
             attempt__user=user,
@@ -207,7 +223,7 @@ def filtered_quiz(request):
         random.shuffle(mastered)
         questions = (unmastered + mastered)[:num_questions]
     else:
-        # For anonymous users, just shuffle the full queryset
+        # Anonymous fallback
         questions = list(queryset)
         random.shuffle(questions)
         questions = questions[:num_questions]
@@ -216,8 +232,10 @@ def filtered_quiz(request):
         'questions': questions,
         'time_per_question': time_per_question,
         'chain_length': chain_length,
-        'is_authenticated': request.user.is_authenticated,  # Add this to control result saving in JS
+        'is_authenticated': request.user.is_authenticated,
     })
+
+
  
 
 @csrf_protect
@@ -853,3 +871,53 @@ def monitoring_dashboard(request):
     }
 
     return render(request, "mcq/dashboard.html", context)
+
+from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from mcq.models import Subtopic, ExamBoard
+from .forms import SubtopicPreferencesForm
+
+@login_required
+def advanced_settings(request):
+    profile = request.user.profile
+
+    all_subtopics = Subtopic.objects.all()
+    all_boards = ExamBoard.objects.all()
+
+    if request.method == 'POST':
+        # Handle subtopics (invert logic)
+        submitted_subtopic_ids = set(map(int, request.POST.getlist('excluded_subtopics')))
+        included_subtopics = submitted_subtopic_ids
+        excluded_subtopics = all_subtopics.exclude(id__in=included_subtopics)
+        profile.excluded_subtopics.set(excluded_subtopics)
+
+        # Handle exam boards (invert logic)
+        submitted_board_ids = set(map(int, request.POST.getlist('excluded_exam_boards')))
+        included_boards = submitted_board_ids
+        excluded_boards = all_boards.exclude(id__in=included_boards)
+        profile.excluded_exam_boards.set(excluded_boards)
+
+        return redirect('advanced_settings')
+
+    else:
+        form = SubtopicPreferencesForm(initial={
+            'excluded_subtopics': profile.excluded_subtopics.all(),
+            'excluded_exam_boards': profile.excluded_exam_boards.all(),
+        })
+
+    # Group subtopics by topic
+    grouped = defaultdict(list)
+    for sub in Subtopic.objects.select_related('topic').order_by('topic__name', 'name'):
+        grouped[sub.topic].append(sub)
+    grouped_subtopics = dict(grouped)
+
+    return render(request, 'mcq/advanced_settings.html', {
+        'form': form,
+        'grouped_subtopics': grouped_subtopics,
+        'initial_ids': set(s.id for s in all_subtopics.exclude(id__in=profile.excluded_subtopics.all())),
+        'initial_board_ids': set(b.id for b in all_boards.exclude(id__in=profile.excluded_exam_boards.all())),
+    })
+
+
+

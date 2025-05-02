@@ -18,5 +18,22 @@ class QuantaCreateForm(forms.ModelForm):
         }
 
 
+# profiles/forms.py
+from django import forms
+from mcq.models import Subtopic, ExamBoard
 
+class SubtopicPreferencesForm(forms.Form):
+
+    excluded_exam_boards = forms.ModelMultipleChoiceField(
+    queryset=ExamBoard.objects.order_by('name'),
+    widget=forms.CheckboxSelectMultiple,
+    required=False,
+    label="Exclude these exam boards"
+)
+    excluded_subtopics = forms.ModelMultipleChoiceField(
+        queryset=Subtopic.objects.order_by('name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Select subtopics to exclude from quizzes:"
+    )
 

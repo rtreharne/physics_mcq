@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.utils import timezone
 import string, random
 
+
 def generate_unique_invite_code():
     chars = string.ascii_letters + string.digits
     while True:
@@ -14,35 +15,7 @@ def generate_unique_invite_code():
             return code
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    anonymous_name = models.CharField(max_length=150, unique=True)
-    points = models.PositiveIntegerField(default=0)
-    chain_length = models.IntegerField(default=1)
-    last_chain_date = models.DateField(null=True, blank=True)
 
-    default_num_questions = models.PositiveIntegerField(default=10)
-    default_time_per_question = models.FloatField(default=1.0)
-
-    is_simulated = models.BooleanField(default=False)
-
-    accuracy_mean = models.FloatField(default=0.7)
-    accuracy_stddev = models.FloatField(default=0.1)
-
-    
-    def update_chain(self):
-        today = now().date()
-        if self.last_chain_date == today:
-            return  # Already updated today
-        elif self.last_chain_date == today - timedelta(days=1):
-            self.chain_length += 1
-        else:
-            self.chain_length = 1  # Reset chain
-        self.last_chain_date = today
-        self.save()
-
-    def __str__(self):
-        return self.anonymous_name
 
 
 class Topic(models.Model):
@@ -61,6 +34,8 @@ class Subtopic(models.Model):
 
     def __str__(self):
         return f"{self.topic.name} – {self.name}"
+    
+
 
 
 class ExamBoard(models.Model):
@@ -68,6 +43,39 @@ class ExamBoard(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    anonymous_name = models.CharField(max_length=150, unique=True)
+    points = models.PositiveIntegerField(default=0)
+    chain_length = models.IntegerField(default=1)
+    last_chain_date = models.DateField(null=True, blank=True)
+
+    default_num_questions = models.PositiveIntegerField(default=10)
+    default_time_per_question = models.FloatField(default=1.0)
+
+    is_simulated = models.BooleanField(default=False)
+
+    accuracy_mean = models.FloatField(default=0.7)
+    accuracy_stddev = models.FloatField(default=0.1)
+
+    excluded_subtopics = models.ManyToManyField(Subtopic, blank=True)
+    excluded_exam_boards = models.ManyToManyField(ExamBoard, blank=True)
+
+
+    def update_chain(self):
+        today = now().date()
+        if self.last_chain_date == today:
+            return
+        elif self.last_chain_date == today - timedelta(days=1):
+            self.chain_length += 1
+        else:
+            self.chain_length = 1
+        self.last_chain_date = today
+        self.save()
+
+    def __str__(self):
+        return self.anonymous_name
 
 class Question(models.Model):
     DIFFICULTY_LEVELS = [
