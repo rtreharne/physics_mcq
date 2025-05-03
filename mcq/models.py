@@ -5,6 +5,7 @@ from django.shortcuts import render
 from datetime import timedelta
 from django.utils import timezone
 import string, random
+from django.db.models import JSONField
 
 
 def generate_unique_invite_code():
@@ -61,6 +62,8 @@ class Profile(models.Model):
 
     excluded_subtopics = models.ManyToManyField(Subtopic, blank=True)
     excluded_exam_boards = models.ManyToManyField(ExamBoard, blank=True)
+
+    excluded_difficulties = JSONField(default=list)
 
 
     def update_chain(self):

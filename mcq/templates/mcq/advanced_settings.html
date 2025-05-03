@@ -6,19 +6,14 @@
 
   <form method="post" id="settings-form">
     {% csrf_token %}
-
+  
     <!-- Exam Board Toggles -->
     <div class="card mb-5">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-          <h5 class="mb-0">Exam Board Selection</h5>
-          <small class="text-muted">
-            Turn off any exam boards you don’t want to include in your quizzes. Only questions from toggled-on exam boards will appear.
-          </small>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-all-boards">
-          Toggle All
-        </button>
+      <div class="card-header">
+        <h5 class="mb-0">Exam Board Selection</h5>
+        <small class="text-muted">
+          Turn off any exam boards you don’t want to include in your quizzes. Only questions from toggled-on exam boards will appear.
+        </small>
       </div>
       <ul class="list-group list-group-flush">
         {% for board in form.fields.excluded_exam_boards.queryset %}
@@ -26,16 +21,40 @@
             <span>{{ board.name }}</span>
             <div class="form-check form-switch">
               <input class="form-check-input exam-board-toggle"
-                    type="checkbox"
-                    name="excluded_exam_boards"
-                    value="{{ board.id }}"
-                    {% if board.id in initial_board_ids %}checked{% endif %}>
+                     type="checkbox"
+                     name="excluded_exam_boards"
+                     value="{{ board.id }}"
+                     {% if board.id in initial_board_ids %}checked{% endif %}>
             </div>
           </li>
         {% endfor %}
       </ul>
     </div>
-
+  
+    <!-- Difficulty Exclusion -->
+    <div class="card mb-5">
+      <div class="card-header">
+        <h5 class="mb-0">Difficulty Levels</h5>
+        <small class="text-muted">
+          Turn off difficulty levels you want to exclude from your quizzes.
+        </small>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for value, label in difficulty_levels %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ label }}</span>
+            <div class="form-check form-switch">
+              <input class="form-check-input difficulty-toggle"
+                     type="checkbox"
+                     name="excluded_difficulties"
+                     value="{{ value }}"
+                     {% if value not in initial_difficulty_values %}checked{% endif %}>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  
     <!-- Subtopic Toggles Section Heading -->
     <div class="mb-4">
       <h4 class="mb-1">Topic Preferences</h4>
@@ -43,38 +62,38 @@
         Toggle subtopics on or off below. Only questions from subtopics with the toggle turned <strong>on</strong> will appear in your quizzes.
       </p>
     </div>
-
-    <!-- ✅ Subtopic Toggles -->
+  
+    <!-- Subtopic Toggles -->
     {% for topic, subtopics in grouped_subtopics.items %}
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>{{ topic.name }}</strong>
-        <button type="button" class="btn btn-sm btn-outline-secondary topic-toggle" data-topic="{{ topic.id }}">
-          Toggle All
-        </button>
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <strong>{{ topic.name }}</strong>
+          <button type="button" class="btn btn-sm btn-outline-secondary topic-toggle" data-topic="{{ topic.id }}">
+            Toggle All
+          </button>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for sub in subtopics %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ sub.name }}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input subtopic-toggle"
+                       type="checkbox"
+                       role="switch"
+                       name="excluded_subtopics"
+                       value="{{ sub.id }}"
+                       data-topic="{{ topic.id }}"
+                       {% if sub.id in initial_ids %}checked{% endif %}>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
-      <ul class="list-group list-group-flush">
-        {% for sub in subtopics %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ sub.name }}</span>
-            <div class="form-check form-switch">
-              <input class="form-check-input subtopic-toggle"
-                     type="checkbox"
-                     role="switch"
-                     name="excluded_subtopics"
-                     value="{{ sub.id }}"
-                     data-topic="{{ topic.id }}"
-                     {% if sub.id in initial_ids %}checked{% endif %}>
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
     {% endfor %}
   </form>
 </div>
 
-<!-- ✅ Bottom Save Bar -->
+<!-- Bottom Save Bar -->
 <div class="bottom-bar-container">
   <div class="bottom-bar-content">
     <button id="save-button"
@@ -87,6 +106,7 @@
   </div>
 </div>
 
+<!-- JavaScript -->
 <script>
   const saveButton = document.getElementById('save-button');
   const form = document.getElementById('settings-form');
@@ -95,17 +115,22 @@
     saveButton.disabled = false;
   }
 
-  // Handle subtopic changes
+  // Enable save when subtopics change
   document.querySelectorAll('.subtopic-toggle').forEach(cb => {
     cb.addEventListener('change', enableSave);
   });
 
-  // Handle exam board changes
+  // Enable save when exam boards change
   document.querySelectorAll('.exam-board-toggle').forEach(cb => {
     cb.addEventListener('change', enableSave);
   });
 
-  // Topic toggle logic
+  // Enable save when difficulty toggles change
+  document.querySelectorAll('.difficulty-toggle').forEach(cb => {
+    cb.addEventListener('change', enableSave);
+  });
+
+  // Topic toggle logic (subtopics only)
   document.querySelectorAll('.topic-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const topicId = btn.dataset.topic;
@@ -116,18 +141,9 @@
     });
   });
 
-  // Exam board toggle-all logic
-  const boardToggles = document.querySelectorAll('.exam-board-toggle');
-  document.getElementById('toggle-all-boards')?.addEventListener('click', () => {
-    const anyUnchecked = Array.from(boardToggles).some(cb => !cb.checked);
-    boardToggles.forEach(cb => cb.checked = anyUnchecked);
-    enableSave();
-  });
-
-  // Prevent multiple form submissions
+  // Prevent double submission
   form.addEventListener('submit', () => {
     saveButton.disabled = true;
   });
 </script>
-
 {% endblock %}

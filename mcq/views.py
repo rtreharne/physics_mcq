@@ -198,17 +198,17 @@ def filtered_quiz(request):
 
     if user:
         excluded_boards = list(user.profile.excluded_exam_boards.values_list('id', flat=True))
+        excluded_difficulties = [d.lower() for d in (user.profile.excluded_difficulties or [])]
 
-        # Annotate how many NON-excluded boards each question has
+        # Exclude questions with all exam boards excluded
         queryset = queryset.annotate(
             allowed_board_count=Count('exam_boards', filter=~Q(exam_boards__id__in=excluded_boards))
         ).filter(
-            allowed_board_count__gt=0  # Keep only questions with at least one allowed board
+            allowed_board_count__gt=0
         )
 
-
-
-
+        # ❌ Exclude by difficulty
+        queryset = queryset.exclude(difficulty__in=excluded_difficulties)
         # ✅ Prioritize unseen questions
         correct_before = QuizResponse.objects.filter(
             question=OuterRef('pk'),
@@ -218,10 +218,11 @@ def filtered_quiz(request):
         queryset = queryset.annotate(correct_before=Exists(correct_before))
 
         all_questions = list(queryset)
-        unmastered = [q for q in all_questions if not q.correct_before]
-        mastered = [q for q in all_questions if q.correct_before]
+        unmastered = [q for q in all_questions if not q.correct_before and q.difficulty not in excluded_difficulties]
+        mastered = [q for q in all_questions if q.correct_before and q.difficulty not in excluded_difficulties]
         random.shuffle(mastered)
         questions = (unmastered + mastered)[:num_questions]
+
     else:
         # Anonymous fallback
         questions = list(queryset)
@@ -878,6 +879,13 @@ from django.shortcuts import render, redirect
 from mcq.models import Subtopic, ExamBoard
 from .forms import SubtopicPreferencesForm
 
+DIFFICULTY_LEVELS = [
+    ('easy', 'Easy'),
+    ('medium', 'Medium'),
+    ('hard', 'Hard'),
+    ('hardcore', 'Hardcore'),
+]
+
 @login_required
 def advanced_settings(request):
     profile = request.user.profile
@@ -898,6 +906,14 @@ def advanced_settings(request):
         excluded_boards = all_boards.exclude(id__in=included_boards)
         profile.excluded_exam_boards.set(excluded_boards)
 
+        # Handle difficulty levels
+        all_difficulties = [choice[0] for choice in Question._meta.get_field('difficulty').choices]
+        included_difficulties = request.POST.getlist('excluded_difficulties')  # misnamed, really "included"
+        excluded_difficulties = [d for d in all_difficulties if d not in included_difficulties]
+
+        profile.excluded_difficulties = excluded_difficulties
+        profile.save()
+
         return redirect('advanced_settings')
 
     else:
@@ -917,6 +933,8 @@ def advanced_settings(request):
         'grouped_subtopics': grouped_subtopics,
         'initial_ids': set(s.id for s in all_subtopics.exclude(id__in=profile.excluded_subtopics.all())),
         'initial_board_ids': set(b.id for b in all_boards.exclude(id__in=profile.excluded_exam_boards.all())),
+        'difficulty_levels': DIFFICULTY_LEVELS,
+        'initial_difficulty_values': profile.excluded_difficulties,
     })
 
 
