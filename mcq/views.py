@@ -966,4 +966,15 @@ def advanced_settings(request):
     })
 
 
+from django.conf import settings
+
+from mcq.management.commands.simulate_hourly_attempts import Command
+@csrf_exempt
+def simulate_hourly_attempts_view(request):
+    if request.method == "GET" and request.GET.get("key") == settings.CRON_SECRET_KEY:
+        Command().handle()
+        return JsonResponse({"status": "ok", "job": "simulate_hourly_attempts"})
+    return HttpResponseForbidden("Not allowed.")
+
+
 

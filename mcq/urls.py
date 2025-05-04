@@ -22,14 +22,5 @@ urlpatterns = [
     path('save-quiz-preferences/', views.save_quiz_preferences, name='save_quiz_preferences'),
     path('dashboard/', views.monitoring_dashboard, name='monitoring_dashboard'),
     path('advanced-settings/', views.advanced_settings, name='advanced_settings'),
-
-
-
-
-
-
-
-
-
-    
+    path('cron/simulate-hourly-attempts/', views.simulate_hourly_attempts_view, name="simulate_hourly_attempts"),
 ]

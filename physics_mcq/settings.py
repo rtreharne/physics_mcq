@@ -19,6 +19,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-!@#4$%^&*()_+')
 DEBUG = os.getenv('DEBUG', default='True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='localhost').split(',')
 
+CRON_SECRET_KEY = os.getenv('CRON_SECRET_KEY', default='django-insecure-!@#4$%^&*()_+')
+
 
 
 # Application definition
