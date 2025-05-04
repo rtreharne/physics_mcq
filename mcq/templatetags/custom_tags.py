@@ -11,6 +11,8 @@ def percent(value, total):
     try:
         value = float(value)
         total = float(total)
+        if total <= 0:
+            return "–"
         return f"{(value / total) * 100:.1f}%"
     except (ValueError, ZeroDivisionError, TypeError):
         return "–"

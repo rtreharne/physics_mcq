@@ -150,6 +150,13 @@ def download_pdf(request):
     return response
 
 
+from django.shortcuts import render
+from django.utils.timezone import now, timedelta
+from mcq.models import Topic, Question, Profile, QuizAttempt
+
+from django.utils.timezone import now, timedelta
+from mcq.models import Topic, Question, Profile, QuizAttempt
+
 def home(request):
     topics = Topic.objects.prefetch_related('subtopics').order_by('name')
     total_questions = Question.objects.count()
@@ -157,7 +164,6 @@ def home(request):
     selected_subtopics = request.GET.get('subtopics', '')
     selected_subtopics = list(map(int, selected_subtopics.split(','))) if selected_subtopics else []
 
-    # Get excluded subtopics if user is authenticated
     excluded_subtopic_ids = set()
     if request.user.is_authenticated:
         excluded_subtopic_ids = set(request.user.profile.excluded_subtopics.values_list('id', flat=True))
@@ -167,12 +173,34 @@ def home(request):
         for subtopic in topic.subtopics.all():
             subtopic.question_count = Question.objects.filter(subtopic=subtopic).count()
 
+    now_time = now()
+    one_hour_ago = now_time - timedelta(hours=1)
+    start_of_day = now_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    attempts_today = QuizAttempt.objects.filter(date_taken__gte=start_of_day)
+    attempts_last_hour = QuizAttempt.objects.filter(date_taken__gte=one_hour_ago)
+
+    quizzes_today = attempts_today.count()
+    quizzes_last_hour = attempts_last_hour.count()
+
+    students_today = attempts_today.values('user').distinct().count()
+    students_last_hour = attempts_last_hour.values('user').distinct().count()
+
+    new_students_today = Profile.objects.filter(user__date_joined__gte=start_of_day).count()
+
     return render(request, 'mcq/home.html', {
         'topics': topics,
         'selected_subtopics': selected_subtopics,
         'total_questions': total_questions,
-        'excluded_subtopic_ids': excluded_subtopic_ids, 
+        'excluded_subtopic_ids': excluded_subtopic_ids,
+        'recent_students': students_last_hour,
+        'recent_attempts': quizzes_last_hour,
+        'students_today': students_today,
+        'quizzes_today': quizzes_today,
+        'new_students_today': new_students_today,
     })
+
+
 
 
 
@@ -451,7 +479,7 @@ def quiz_history(request):
     # Overall stats
     total_questions = attempts.aggregate(total=Sum('total_questions'))['total'] or 0
     avg_score = round(
-        attempts.aggregate(avg=Avg(F('score') * 100.0 / F('total_questions')))['avg'] or 0, 1
+        attempts.aggregate(avg=Avg(F('score') * 100 / F('total_questions')))['avg'] or 0, 1
     )
     total_available = Question.objects.count()
     unique_correct = QuizResponse.objects.filter(
@@ -724,7 +752,7 @@ def view_quanta(request, quanta_id):
 
         # Weighted average score (accurate)
         accuracy_qs = attempts.annotate(
-            weighted_score=F('score') * 100.0 / F('total_questions')
+            weighted_score=F('score') * 100 / F('total_questions')
         ).aggregate(avg=Avg('weighted_score'))
         accuracy = round(accuracy_qs['avg'], 1) if accuracy_qs['avg'] is not None else None
 
