@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         count = kwargs['count']
         processed = 0
-        start_date = timezone.now() - timedelta(days=120)
+        start_date = timezone.now()
 
         for _ in range(count):
             # Generate consistent user details
@@ -34,7 +34,7 @@ class Command(BaseCommand):
                 counter += 1
 
             email = f"{username}@example.com"
-            signup_date = start_date + timedelta(days=random.randint(0, 120))
+            signup_date = start_date
 
             # Create user
             user = User.objects.create_user(

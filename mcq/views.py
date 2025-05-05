@@ -969,6 +969,7 @@ def advanced_settings(request):
 from django.conf import settings
 
 from mcq.management.commands.simulate_hourly_attempts import Command
+from mcq.management.commands.simulate_hourly_signups import Command as SignupsCommand
 @csrf_exempt
 def simulate_hourly_attempts_view(request):
     if request.method == "GET" and request.GET.get("key") == settings.CRON_SECRET_KEY:
@@ -976,5 +977,10 @@ def simulate_hourly_attempts_view(request):
         return JsonResponse({"status": "ok", "job": "simulate_hourly_attempts"})
     return HttpResponseForbidden("Not allowed.")
 
-
+@csrf_exempt
+def simulate_hourly_signups_view(request):
+    if request.method == "GET" and request.GET.get("key") == settings.CRON_SECRET_KEY:
+        SignupsCommand().handle()
+        return JsonResponse({"status": "ok", "job": "simulate_hourly_signups"})
+    return HttpResponseForbidden("Not allowed.")
 

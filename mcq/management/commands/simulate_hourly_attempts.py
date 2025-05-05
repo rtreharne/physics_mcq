@@ -22,14 +22,19 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"👥 Simulating activity for {total_users} simulated users...\n"))
 
         for i, profile in enumerate(simulated_profiles, 1):
-            if random.random() < 0.5:  # 50% chance this user participates
+            attempts_made = False
+
+            if random.random() < 0.5:
                 num_attempts = random.randint(0, 3)
                 for _ in range(num_attempts):
                     total_attempts += 1
                     self.simulate_attempt(profile, questions, questions_per_attempt)
+                    attempts_made = True
 
-            # 🔄 Show progress
-            self.print_progress(i, total_users)
+                if attempts_made:
+                    profile.update_chain()
+
+        self.print_progress(i, total_users)
 
         self.stdout.write("\n")
         self.stdout.write(self.style.SUCCESS(f"✅ Finished. Simulated {total_attempts} quiz attempts."))
