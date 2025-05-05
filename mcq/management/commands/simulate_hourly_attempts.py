@@ -9,6 +9,11 @@ class Command(BaseCommand):
     help = "Simulate hourly quiz attempts for all is_simulated=True users with a 50% chance."
 
     def handle(self, *args, **options):
+        current_hour = now().hour
+        if current_hour < 7 or current_hour >= 20:
+            self.stdout.write("⏰ Outside active simulation window (07:00–20:00). Skipping simulation.")
+            return
+
         simulated_profiles = list(Profile.objects.filter(is_simulated=True))
         total_users = len(simulated_profiles)
         questions = list(Question.objects.all())
@@ -34,7 +39,7 @@ class Command(BaseCommand):
                 if attempts_made:
                     profile.update_chain()
 
-        self.print_progress(i, total_users)
+            self.print_progress(i, total_users)
 
         self.stdout.write("\n")
         self.stdout.write(self.style.SUCCESS(f"✅ Finished. Simulated {total_attempts} quiz attempts."))
