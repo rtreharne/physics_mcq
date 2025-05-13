@@ -24,4 +24,7 @@ urlpatterns = [
     path('advanced-settings/', views.advanced_settings, name='advanced_settings'),
     path('cron/simulate-hourly-attempts/', views.simulate_hourly_attempts_view, name="simulate_hourly_attempts"),
     path('cron/simulate-hourly-signups/', views.simulate_hourly_signups_view, name="simulate_hourly_signups"),
+    path('shareable/', views.share_question, name='share_random_question'),
+    path('shareable/<int:question_id>/', views.share_question, name='share_question'),
+
 ]

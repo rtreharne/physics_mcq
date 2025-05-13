@@ -984,3 +984,11 @@ def simulate_hourly_signups_view(request):
         return JsonResponse({"status": "ok", "job": "simulate_hourly_signups"})
     return HttpResponseForbidden("Not allowed.")
 
+
+def share_question(request, question_id=None):
+    if question_id is None:
+        question_id = random.choice(
+            Question.objects.values_list('id', flat=True)
+        )
+    question = get_object_or_404(Question, id=question_id)
+    return render(request, 'mcq/question_share.html', {'question': question})

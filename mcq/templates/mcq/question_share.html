@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Physics Fix</title>
+  <style>
+    body {
+      background: #eee;
+      margin: 0;
+      padding: 40px;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .square-box {
+      width: 500px;
+      height: 500px;
+      background: #fff;
+      border: 4px solid #000;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 14px 0;
+      letter-spacing: 2px;
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .scaling-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      max-height: 100%;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .easy     { background-color: #28a745; }
+    .medium   { background-color: #007bff; }
+    .hard     { background-color: #fd7e14; }
+    .hardcore { background-color: #dc3545; }
+    .default  { background-color: #6c757d; }
+
+    .question {
+      font-size: clamp(12px, 2.5vw, 20px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .answer {
+      font-size: clamp(12px, 2.3vw, 18px);
+      font-weight: 700;
+      padding: 8px 10px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #f8f8f8;
+      cursor: default;
+    }
+
+    .footer {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 14px 0;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-size: 1.4rem;
+    }
+
+    .brand-title .highlight {
+      color: #ffc107;
+      font-weight: 800;
+    }
+
+    .brand-title .domain {
+      color: #ccc;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .caption-box {
+      width: 500px;
+      margin-top: 20px;
+    }
+
+    .caption-box label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .caption-box textarea {
+      width: 100%;
+      height: 160px;
+      font-size: 14px;
+      padding: 10px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      resize: none;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    #download-btn {
+      margin-top: 16px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      background-color: #000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #download-btn:hover {
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <!-- Square Box -->
+    <div id="capture-area" class="square-box">
+      <div class="header">DAILY PHYSICS FIX</div>
+
+      <div class="content">
+        <div class="scaling-text">
+          <div class="badge {% if question.difficulty == 'easy' %}easy{% elif question.difficulty == 'medium' %}medium{% elif question.difficulty == 'hard' %}hard{% elif question.difficulty == 'hardcore' %}hardcore{% else %}default{% endif %}">
+            {{ question.difficulty|title }} | #{{ question.id }}
+          </div>
+
+          <div class="meta">
+            {{ question.topic.name }}{% if question.subtopic %} → {{ question.subtopic.name }}{% endif %}
+          </div>
+
+          <div class="question">
+            {{ question.question_text|safe }}
+          </div>
+
+          <div class="answers">
+            <div class="answer"><strong>A.</strong> {{ question.option_a|safe }}</div>
+            <div class="answer"><strong>B.</strong> {{ question.option_b|safe }}</div>
+            <div class="answer"><strong>C.</strong> {{ question.option_c|safe }}</div>
+            <div class="answer"><strong>D.</strong> {{ question.option_d|safe }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="brand-title">
+          Physics<span class="highlight">MCQs</span><span class="domain">.org</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Correct Answer Display (not part of screenshot) -->
+<div style="width: 500px; margin-top: 12px; font-size: 16px; font-weight: bold; text-align: center; color: #333;">
+  ✅ Correct answer: {{ question.correct_option }}.
+  {% if question.explanation %}
+    <div style="font-size: 14px; font-weight: normal; margin-top: 4px; color: #555;">
+      {{ question.explanation|safe }}
+    </div>
+  {% endif %}
+</div>
+
+
+    <!-- Caption Box -->
+    <div class="caption-box">
+      <label for="ig-caption">Suggested Instagram caption:</label>
+      <textarea id="ig-caption">Can you crack today's #DailyPhysicsFix? 🧠⚡
+
+Think you know it? Drop your answer below 👇
+
+📚 Spaced quizzing — little and often — is proven to boost understanding, retention, and grades.
+
+💡 PhysicsMCQs.org delivers smart, personalised quizzes to target your weak spots.
+
+📊 Track your progress. 🏆 Climb the leaderboard.  
+🎓 100% free for all A-level Physics students — no signup required!
+
+#ALevelPhysics #Physics #PhysicsQuiz #STEM #PhysicsRevision #SmartStudy #ScienceIsCool #PhysicsChallenge #LearnPhysics #MultipleChoice #QuizTime</textarea>
+    </div>
+
+    <!-- Button to download .square-box as image -->
+    <button id="download-btn">Download Image</button>
+  </div>
+
+  <div id="meta" data-question-id="{{ question.id }}"></div>
+
+  
+
+  <!-- HTML2Canvas Script -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    document.getElementById('download-btn').addEventListener('click', function () {
+      const questionId = document.getElementById("meta").dataset.questionId;
+      const captureArea = document.getElementById('capture-area');
+  
+      html2canvas(captureArea, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `physics-question-${questionId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    });
+  </script>
+  
+
+
+</body>
+</html>
