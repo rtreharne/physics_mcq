@@ -32,14 +32,14 @@ class QuantaAdmin(admin.ModelAdmin):
 @admin.register(QuantaMembership)
 class QuantaMembershipAdmin(admin.ModelAdmin):
     list_display = ('quanta', 'profile', 'joined_at')
-    search_fields = ('quanta__name', 'profile__anaonymous_name')
+    search_fields = ('quanta__name', 'profile__anonymous_name')
     list_filter = ('joined_at',)
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'anonymous_name', 'default_num_questions', 'default_time_per_question',)
-    search_fields = ('user__email', 'anonymous_name')
+    list_display = ('user', 'anonymous_name', 'is_simulated', 'default_num_questions', 'default_time_per_question',)
+    search_fields = ('user__email', 'anonymous_name', 'is_simulated')
 
 
 @admin.register(Subtopic)
